@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Learning Center",
+    "aliases": ["LC", "Learning Center", "LC Building"],
+    "lat": 37.3184,
+    "lng": -122.0446
+  },
+  {
+    "name": "Registration and Student Services",
+    "aliases": ["RSS", "Registration and Student Services", "RSS Building"],
+    "lat": 37.318,
+    "lng": -122.0451
+  }
+]

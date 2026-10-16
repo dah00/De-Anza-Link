@@ -1,0 +1,12 @@
+[
+  {
+    "name": "Transfer Center",
+    "email": "datransfercenter@fhda.edu",
+    "topics": ["transfer", "PIQ", "UC applications"]
+  },
+  {
+    "name": "Outreach Office",
+    "email": "outreach@deanza.edu",
+    "topics": ["general questions", "getting started", "campus resources"]
+  }
+]
