@@ -1,0 +1,95 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+export type Person = {
+  id: string;
+  displayName: string;
+  photoUrl: string | null;
+};
+
+export type Activity = {
+  id: string;
+  title: string;
+  description: string | null;
+  interest: string;
+  startsAt: string;
+  location: string;
+  maxPeople: number;
+  creatorId: string;
+  going: Person[];
+  joinedByMe: boolean;
+};
+
+export function spotsLeft(activity: Activity) {
+  return Math.max(activity.maxPeople - activity.going.length, 0);
+}
+
+type ActivityRow = {
+  id: string;
+  title: string;
+  description: string | null;
+  interest: string;
+  starts_at: string;
+  location: string;
+  max_people: number;
+  creator_id: string;
+  participations: {
+    joined_at: string;
+    profiles: {
+      id: string;
+      display_name: string | null;
+      photo_url: string | null;
+    } | null;
+  }[];
+};
+
+const ACTIVITY_SELECT = `
+  id, title, description, interest, starts_at, location, max_people, creator_id,
+  participations (joined_at, profiles (id, display_name, photo_url))
+`;
+
+function toActivity(row: ActivityRow, userId: string): Activity {
+  const going = [...row.participations]
+    .sort((a, b) => a.joined_at.localeCompare(b.joined_at))
+    .flatMap((p) =>
+      p.profiles
+        ? [
+            {
+              id: p.profiles.id,
+              displayName: p.profiles.display_name ?? "Student",
+              photoUrl: p.profiles.photo_url,
+            },
+          ]
+        : [],
+    );
+
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    interest: row.interest,
+    startsAt: row.starts_at,
+    location: row.location,
+    maxPeople: row.max_people,
+    creatorId: row.creator_id,
+    going,
+    joinedByMe: going.some((p) => p.id === userId),
+  };
+}
+
+/** Activities that haven't started yet, soonest first. */
+export async function getUpcomingActivities(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<Activity[]> {
+  const { data, error } = await supabase
+    .from("activities")
+    .select(ACTIVITY_SELECT)
+    .gte("starts_at", new Date().toISOString())
+    .order("starts_at", { ascending: true })
+    .limit(200);
+
+  if (error) throw error;
+  return (data as unknown as ActivityRow[]).map((row) =>
+    toActivity(row, userId),
+  );
+}

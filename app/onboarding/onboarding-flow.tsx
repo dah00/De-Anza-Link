@@ -52,7 +52,7 @@ export function OnboardingFlow({
           aria-valuenow={step + 1}
         >
           <div
-            className="h-full rounded-full bg-foreground transition-[width] duration-300"
+            className="h-full rounded-full bg-primary transition-[width] duration-300"
             style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
           />
         </div>
@@ -155,8 +155,8 @@ function InterestsStep({
                     className={cn(
                       "rounded-full border px-3.5 py-1.5 text-sm transition-colors",
                       on
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border bg-background hover:border-foreground/40",
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card hover:border-primary/40",
                     )}
                   >
                     {interest}
@@ -364,7 +364,7 @@ function AboutStep({
             placeholder="Transfer student, always down for boba."
             maxLength={160}
             rows={3}
-            className="w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-foreground/40"
+            className="w-full resize-none rounded-md border border-input bg-card px-3 py-2 text-base outline-none placeholder:text-muted-foreground focus-visible:border-foreground/40"
           />
           <span className="text-right text-xs font-normal text-muted-foreground">
             {data.bio.length}/160
