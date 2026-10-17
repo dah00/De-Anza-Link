@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { unstable_noStore as noStore } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { AccountForm } from "./account-form";
@@ -12,6 +13,7 @@ export default function AccountPage() {
 }
 
 async function AccountLoader() {
+  noStore();
   const supabase = await createClient();
   const {
     data: { user },
@@ -24,16 +26,19 @@ async function AccountLoader() {
     .eq("id", user.id)
     .single();
 
+  const initial = {
+    displayName: profile?.display_name ?? "",
+    major: profile?.major ?? "",
+    bio: profile?.bio ?? "",
+    interests: profile?.interests ?? [],
+  };
+
   return (
     <AccountForm
+      key={user.id}
       email={user.email ?? ""}
       photoUrl={profile?.photo_url ?? null}
-      initial={{
-        displayName: profile?.display_name ?? "",
-        major: profile?.major ?? "",
-        bio: profile?.bio ?? "",
-        interests: profile?.interests ?? [],
-      }}
+      initial={initial}
     />
   );
 }

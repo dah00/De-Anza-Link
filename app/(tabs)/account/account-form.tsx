@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Avatar } from "@/components/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INTEREST_GROUPS } from "@/lib/interests";
 import { cn } from "@/lib/utils";
 import { logOut } from "../../(auth)/actions";
-import { updateProfile, type ProfileData } from "./actions";
+import { deleteAccount, updateProfile, type ProfileData } from "./actions";
 
 function sameInterests(a: string[], b: string[]) {
   if (a.length !== b.length) return false;
@@ -39,6 +39,23 @@ export function AccountForm({
     { kind: "saved" } | { kind: "error"; message: string } | null
   >(null);
   const [pending, startTransition] = useTransition();
+  const [deleting, startDelete] = useTransition();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const initialKey = [
+    initial.displayName,
+    initial.major,
+    initial.bio,
+    ...[...initial.interests].sort(),
+  ].join("\0");
+
+  useEffect(() => {
+    setData(initial);
+    setSaved(initial);
+    // Sync when the server sends a different saved profile (new login, refresh).
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initialKey captures the fields
+  }, [initialKey]);
 
   const dirty = isDirty(data, saved);
 
@@ -191,16 +208,68 @@ export function AccountForm({
         </section>
       </form>
 
-      <form action={logOut}>
-        <Button
-          type="submit"
-          variant="outline"
-          size="lg"
-          className="h-11 w-full"
-        >
-          Log out
-        </Button>
-      </form>
+      <div className="flex flex-col gap-2">
+        <form action={logOut}>
+          <Button
+            type="submit"
+            variant="outline"
+            size="lg"
+            className="h-11 w-full"
+          >
+            Log out
+          </Button>
+        </form>
+
+        {confirmDelete ? (
+          <div className="flex flex-col gap-2">
+            <p className="text-sm text-muted-foreground">
+              This deletes your account and anything you hosted. It can&apos;t
+              be undone.
+            </p>
+            {deleteError && (
+              <p className="text-sm text-destructive">{deleteError}</p>
+            )}
+            <Button
+              type="button"
+              variant="destructive"
+              size="lg"
+              className="h-11 w-full"
+              disabled={deleting}
+              onClick={() =>
+                startDelete(async () => {
+                  const result = await deleteAccount();
+                  if (result?.error) setDeleteError(result.error);
+                })
+              }
+            >
+              {deleting ? "Deleting..." : "Delete my account"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-11 w-full"
+              disabled={deleting}
+              onClick={() => {
+                setConfirmDelete(false);
+                setDeleteError(null);
+              }}
+            >
+              Never mind
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="destructive"
+            size="lg"
+            className="h-11 w-full"
+            onClick={() => setConfirmDelete(true)}
+          >
+            Delete account
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

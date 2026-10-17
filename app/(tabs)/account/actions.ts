@@ -35,7 +35,7 @@ export async function updateProfile(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("profiles")
     .update({
       display_name: displayName,
@@ -43,9 +43,37 @@ export async function updateProfile(
       bio: bio || null,
       interests,
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) return { error: "Couldn't save your changes. Try again." };
+  if (error || !updated) {
+    return { error: "Couldn't save your changes. Try again." };
+  }
 
   refresh();
+}
+
+export async function deleteAccount(): Promise<{ error: string } | undefined> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
+  const { data: files } = await supabase.storage.from("avatars").list(user.id);
+  if (files?.length) {
+    await supabase.storage
+      .from("avatars")
+      .remove(files.map((file) => `${user.id}/${file.name}`));
+  }
+
+  const { error } = await supabase.rpc("delete_own_account");
+  if (error) {
+    console.error("delete_own_account failed", error);
+    return { error: "Couldn't delete your account. Try again." };
+  }
+
+  await supabase.auth.signOut();
+  redirect("/login");
 }

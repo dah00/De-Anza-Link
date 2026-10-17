@@ -74,6 +74,15 @@ create policy "Users can replace their own avatar"
     and (storage.foldername(name))[1] = (select auth.uid())::text
   );
 
+drop policy if exists "Users can delete their own avatar" on storage.objects;
+create policy "Users can delete their own avatar"
+  on storage.objects for delete
+  to authenticated
+  using (
+    bucket_id = 'avatars'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
 -- Activities: small meetups anyone signed in can create and join.
 create table if not exists public.activities (
   id uuid primary key default gen_random_uuid(),
@@ -188,3 +197,27 @@ drop trigger if exists check_activity_capacity on public.participations;
 create trigger check_activity_capacity
   before insert on public.participations
   for each row execute function public.check_activity_capacity();
+
+-- Lets a signed-in user delete their own auth user. Profile, hosted activities,
+-- and joins cascade from that. Avatar files are removed through the Storage API
+-- in the app — direct deletes on storage.objects are blocked by Supabase.
+create or replace function public.delete_own_account()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  delete from auth.users where id = uid;
+end;
+$$;
+
+revoke all on function public.delete_own_account() from public;
+revoke all on function public.delete_own_account() from anon;
+grant execute on function public.delete_own_account() to authenticated;

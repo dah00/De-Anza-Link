@@ -1,6 +1,6 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 12:20pm. Demo at 2:00pm.
+Last updated: Saturday, Oct 17, 2026, 12:50pm. Demo at 2:00pm.
 
 `AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
 
@@ -78,7 +78,7 @@ Browser ──► proxy.ts ──► Next.js App Router (server components + ser
   - Mobile first: everything sits in a `max-w-md` column.
   - Copy is short and casual ("I'm down", "Can't make it", "Who's going").
 - **Fixed lists** (interests, campus spots) live in `lib/`. Validate with `isInterest` and `isCampusLocation` before saving.
-- **Schema changes** go in `supabase/schema.sql` and must stay re-runnable (`if not exists`, `drop policy if exists`). Tell the team when you change it, since everyone has to re-run it.
+- **Schema changes** go in `supabase/schema.sql` and must stay re-runnable (`if not exists`, `drop policy if exists`). Tell the team when you change it, since everyone has to re-run it. Latest addition: `delete_own_account()` so a signed-in user can remove themselves from Auth (cascades to profile, activities, and joins). Avatar files are deleted through the Storage API, not `storage.objects`.
 - **Before pushing:** `npm run format && npm run lint && npm run build`.
 - **Secrets** only go in `.env.local`. Add new variable names (no values) to `.env.example`.
 
@@ -104,7 +104,7 @@ These were all tested in the browser against the real Supabase project.
   - create, for campus or off-campus places; off-campus address suggestions via Photon; the host joins automatically
   - delete, for the host only
 - [x] **Home:** Your upcoming (capped at 4), For you, Happening today, and the two shortcuts.
-- [x] **Account:** edit name, major, bio, and interests; log out. Save lives in a sticky header and stays disabled until something changes.
+- [x] **Account:** edit name, major, bio, and interests; log out. Save lives in a sticky header and stays disabled until something changes. The form reads the signed-in user's row from `profiles` (not cached/mock data). Users can delete their own account (auth user, profile, hosted activities, joins, and avatar files). `/profile` redirects to `/account`.
 
 ## In progress / not started
 
@@ -121,7 +121,7 @@ These were all tested in the browser against the real Supabase project.
 ## Known bugs and rough edges
 
 - **Resources is a 404.** The Resources tab and Home's "Ask about De Anza" shortcut link to `/resources`, which doesn't exist yet. This breaks the last step of the demo path until the assistant is built.
-- **`npm run lint` fails** on the old mock pages from the merged branch, `app/home/page.tsx` and `app/profile/page.tsx`: there's an unescaped `'` in each. Those pages are also reachable at `/home` and `/profile`, duplicating Home and Account. Either delete them (ask the teammate first) or escape the two apostrophes.
+- **`npm run lint` fails** on the old mock page `app/home/page.tsx`: there's an unescaped `'`. That page is still reachable at `/home`, duplicating Home. `/profile` now redirects to Account.
 - **Seed data goes stale.** Activity times are set when the seed runs, so "Today" activities drift into the past. Re-run `supabase/seed.sql` shortly before the demo. This also resets anyone's joins on seed activities.
 - **Account can't change the photo.** The photo shows, but there's no re-upload yet. Onboarding is currently the only place to upload one.
 - **Search ignores the selected chip.** Typing a search looks across all activities, even if an interest chip was selected. This is on purpose, but it could surprise someone.

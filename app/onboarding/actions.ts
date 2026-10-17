@@ -1,5 +1,6 @@
 "use server";
 
+import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { isInterest } from "@/lib/interests";
 import { createClient } from "@/lib/supabase/server";
@@ -34,7 +35,7 @@ export async function completeOnboarding(
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from("profiles")
     .update({
       interests,
@@ -44,9 +45,14 @@ export async function completeOnboarding(
       bio: bio || null,
       onboarding_completed: true,
     })
-    .eq("id", user.id);
+    .eq("id", user.id)
+    .select("id")
+    .maybeSingle();
 
-  if (error) return { error: "Couldn't save your profile. Try again." };
+  if (error || !updated) {
+    return { error: "Couldn't save your profile. Try again." };
+  }
 
+  refresh();
   redirect("/");
 }
