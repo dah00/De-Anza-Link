@@ -16,5 +16,58 @@
     "topics": ["general questions", "getting started", "campus resources"],
     "verified": false,
     "isGeneral": true
+  },
+  {
+    "name": "Transfer Center",
+    "department": "Transfer Center",
+    "email": "datransfercenter@fhda.edu",
+    "pageUrl": "https://www.deanza.edu/transfercenter/",
+    "topics": [
+      "transfer",
+      "PIQ",
+      "UC",
+      "CSU",
+      "4-year university",
+      "personal insight"
+    ],
+    "verified": false
+  },
+  {
+    "name": "Financial Aid Office",
+    "department": "Financial Aid",
+    "email": "financialaid@deanza.edu",
+    "pageUrl": "https://www.deanza.edu/financialaid/",
+    "topics": [
+      "financial aid",
+      "fafsa",
+      "scholarship",
+      "grant",
+      "promise",
+      "work-study",
+      "tuition help"
+    ],
+    "verified": false
+  },
+  {
+    "name": "Cashier's Office",
+    "department": "Cashier",
+    "email": "deanzacashier@deanza.edu",
+    "pageUrl": "https://www.deanza.edu/cashier/directory.html",
+    "topics": ["pay tuition", "fees", "payment", "refund", "cashier"],
+    "verified": false
+  },
+  {
+    "name": "Office of College Life",
+    "department": "College Life",
+    "email": "collegelife@fhda.edu",
+    "pageUrl": "",
+    "topics": [
+      "smartpass",
+      "clipper",
+      "student activities",
+      "clubs",
+      "student government"
+    ],
+    "verified": false
   }
 ]
