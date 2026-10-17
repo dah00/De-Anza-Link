@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import ProfilePhotoUpload from "@/components/profile-photo-upload";
 import {
   ArrowLeft,
   UserRound,
@@ -106,10 +107,8 @@ export default function ProfilePage() {
         {/* Profile information */}
         <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center gap-4">
-            <div className="rounded-full bg-green-100 p-4 text-green-700">
-              <UserRound size={32} />
-            </div>
-
+            <ProfilePhotoUpload name={name} />
+            
             <div>
               <h2 className="text-xl font-semibold">{name}</h2>
               <p className="text-sm text-gray-500">
