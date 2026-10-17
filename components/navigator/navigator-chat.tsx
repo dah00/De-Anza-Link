@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ExternalLink, LoaderCircle, MapPin, Send } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -13,18 +13,40 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { getCampusMapUrl, matchBuilding } from "@/lib/navigator/buildings";
+import { findContactByEmail } from "@/lib/navigator/contacts";
 import { getEventStatus } from "@/lib/navigator/event-status";
-import { getBuildingMapUrl } from "@/lib/navigator/location";
 import type {
   NavigatorRelatedResource,
   NavigatorResponse,
 } from "@/lib/navigator/types";
 
 const statusVariant = {
-  upcoming: "secondary",
-  "in progress": "default",
-  ended: "outline",
+  upcoming:
+    "border-blue-200 bg-blue-100 text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-200",
+  in_progress:
+    "border-emerald-200 bg-emerald-100 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200",
+  ended:
+    "border-red-200 bg-red-100 text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200",
+  unknown:
+    "border-amber-200 bg-amber-100 text-amber-800 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200",
 } as const;
+
+function formatEventTime(value: string | null): string {
+  if (!value || Number.isNaN(new Date(value).getTime())) {
+    return "Time not confirmed";
+  }
+
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: "America/Los_Angeles",
+    timeZoneName: "short",
+  }).format(new Date(value));
+}
 
 function isRelatedResource(
   resource: unknown,
@@ -101,10 +123,32 @@ export function NavigatorChat() {
     void submitQuestion(resource.query);
   }
 
-  const eventStatus = response?.event ? getEventStatus(response.event) : null;
-  const mapUrl = response?.event
-    ? getBuildingMapUrl(response.event.location_text)
+  const eventStatus = response?.event
+    ? getEventStatus(response.event)
+    : "unknown";
+  const eventBuilding = response?.event
+    ? matchBuilding(response.event.location_text)
     : null;
+  const mapUrl = eventBuilding ? getCampusMapUrl(eventBuilding) : null;
+  const contact = response?.contact
+    ? findContactByEmail(response.contact.email)
+    : null;
+  const relatedResources = Array.isArray(response?.related)
+    ? response.related.filter(isRelatedResource)
+    : [];
+
+  useEffect(() => {
+    if (
+      process.env.NODE_ENV === "development" &&
+      contact &&
+      !contact.verified
+    ) {
+      console.warn(
+        "Campus Navigator is showing an unverified contact:",
+        contact.name,
+      );
+    }
+  }, [contact]);
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -162,38 +206,47 @@ export function NavigatorChat() {
               </ol>
             </section>
 
-            <section>
-              <h2 className="mb-2 text-sm font-semibold">Related resources</h2>
-              <div className="flex flex-wrap gap-2">
-                {response.related.filter(isRelatedResource).map((resource) => (
-                  <Button
-                    key={resource.title}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={() => handleRelatedResourceClick(resource)}
-                  >
-                    {resource.title}
-                  </Button>
-                ))}
-              </div>
-            </section>
+            {relatedResources.length > 0 && (
+              <section>
+                <h2 className="mb-2 text-sm font-semibold">
+                  {response.confidence === "low"
+                    ? "Did you mean one of these?"
+                    : "Related resources"}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {relatedResources.map((resource) => (
+                    <Button
+                      key={resource.title}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoading}
+                      onClick={() => handleRelatedResourceClick(resource)}
+                    >
+                      {resource.title}
+                    </Button>
+                  ))}
+                </div>
+              </section>
+            )}
 
             {response.event && (
               <section className="rounded-lg border border-border p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="font-semibold">{response.event.title}</h2>
-                  {eventStatus && (
-                    <Badge variant={statusVariant[eventStatus]}>
-                      {eventStatus}
-                    </Badge>
-                  )}
+                  <Badge
+                    variant="outline"
+                    className={statusVariant[eventStatus]}
+                  >
+                    {eventStatus.replace("_", " ")}
+                  </Badge>
                 </div>
                 <p className="mt-2 text-sm text-muted-foreground">
+                  {formatEventTime(response.event.start)} –{" "}
+                  {formatEventTime(response.event.end)}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
                   {response.event.location_text}
-                  {response.event.start &&
-                    ` · ${new Date(response.event.start).toLocaleString()}`}
                 </p>
                 {mapUrl && (
                   <Button
@@ -209,8 +262,24 @@ export function NavigatorChat() {
                     size="sm"
                     className="mt-3"
                   >
-                    <MapPin /> Open map
+                    <MapPin /> Open campus map
                   </Button>
+                )}
+                {!mapUrl && (
+                  <div className="mt-3 text-sm text-muted-foreground">
+                    <p>Location not confirmed.</p>
+                    {contact && (
+                      <p>
+                        Contact {contact.name}:{" "}
+                        <a
+                          className="underline underline-offset-4"
+                          href={`mailto:${contact.email}`}
+                        >
+                          {contact.email}
+                        </a>
+                      </p>
+                    )}
+                  </div>
                 )}
               </section>
             )}
@@ -233,18 +302,30 @@ export function NavigatorChat() {
               </ul>
             </section>
 
-            {response.contact && (
+            {contact && (
               <section>
-                <h2 className="mb-1 text-sm font-semibold">Contact</h2>
+                <h2 className="mb-1 text-sm font-semibold">Who to ask</h2>
                 <p className="text-sm text-muted-foreground">
-                  {response.contact.name}:{" "}
+                  {contact.department === contact.name
+                    ? contact.name
+                    : `${contact.department}: ${contact.name}`}
+                </p>
+                <p className="text-sm text-muted-foreground">
                   <a
                     className="underline underline-offset-4"
-                    href={`mailto:${response.contact.email}`}
+                    href={`mailto:${contact.email}`}
                   >
-                    {response.contact.email}
+                    {contact.email}
                   </a>
                 </p>
+                <a
+                  className="mt-1 inline-flex text-sm underline underline-offset-4"
+                  href={contact.pageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Visit {contact.department}
+                </a>
               </section>
             )}
           </CardContent>

@@ -33,4 +33,4 @@ export type NavigatorResponse = {
   contact: NavigatorContact | null;
 };
 
-export type EventStatus = "upcoming" | "in progress" | "ended";
+export type EventStatus = "upcoming" | "in_progress" | "ended" | "unknown";

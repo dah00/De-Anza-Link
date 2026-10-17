@@ -3,10 +3,8 @@ import type { NavigatorResponse } from "@/lib/navigator/types";
 
 export const navigatorSystemPrompt = `You are Campus Navigator for De Anza students. Return ONLY valid JSON matching the NavigatorResponse shape. Use only information from deanza.edu. Never invent buildings, times, or email addresses. If unsure, set confidence to "low" and provide the best contact. If the answer depends on the student's situation, ask one short follow-up question instead of guessing.`;
 
-// Change this one value to test the event card: positive = upcoming, between 0
-// and -60 minutes = in progress, less than -60 minutes = ended.
-const PIQ_EVENT_START_OFFSET_MS = 15 * 60 * 1000;
-const PIQ_EVENT_DURATION_MS = 60 * 60 * 1000;
+// Use a positive value for upcoming, -30 for in progress, or -90 for ended.
+const PIQ_MOCK_OFFSET_MINUTES = 15;
 
 export const COMMUTING_KEYWORDS = [
   "car",
@@ -86,8 +84,8 @@ export async function askNavigator(
   }
 
   if (PIQ_KEYWORDS.some((keyword) => normalizedQuestion.includes(keyword))) {
-    const start = new Date(Date.now() + PIQ_EVENT_START_OFFSET_MS);
-    const end = new Date(start.getTime() + PIQ_EVENT_DURATION_MS);
+    const start = new Date(Date.now() + PIQ_MOCK_OFFSET_MINUTES * 60 * 1000);
+    const end = new Date(start.getTime() + 60 * 60 * 1000);
 
     return {
       answer:
@@ -131,17 +129,20 @@ export async function askNavigator(
     steps: ["Tell us the program, deadline, or service you need help with."],
     related: [
       {
-        title: "Outreach Office",
-        query: "How can the De Anza Outreach Office help me?",
+        title: "Financial aid",
+        query: "How do I get help with financial aid at De Anza?",
       },
       {
-        title: "Transfer Center",
-        query: "What services does the De Anza Transfer Center offer?",
+        title: "Transfer to a 4-year university",
+        query: "How do I transfer to a 4-year university from De Anza?",
       },
       {
-        title: "Student Success Center",
-        query:
-          "What support is available through the De Anza Student Success Center?",
+        title: "Parking and transportation",
+        query: "How do I get to De Anza without a car?",
+      },
+      {
+        title: "Library and tutoring",
+        query: "Where can I get tutoring or use the library at De Anza?",
       },
     ],
     event: null,

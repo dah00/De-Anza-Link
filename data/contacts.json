@@ -1,12 +1,20 @@
 [
   {
     "name": "Transfer Center",
+    "department": "Transfer Center",
     "email": "datransfercenter@fhda.edu",
-    "topics": ["transfer", "PIQ", "UC applications"]
+    "pageUrl": "https://www.deanza.edu/transfercenter/",
+    "topics": ["transfer", "PIQ", "UC applications"],
+    "verified": false,
+    "isGeneral": false
   },
   {
     "name": "Outreach Office",
+    "department": "Outreach Office",
     "email": "outreach@deanza.edu",
-    "topics": ["general questions", "getting started", "campus resources"]
+    "pageUrl": "https://www.deanza.edu/outreach/",
+    "topics": ["general questions", "getting started", "campus resources"],
+    "verified": false,
+    "isGeneral": true
   }
 ]
