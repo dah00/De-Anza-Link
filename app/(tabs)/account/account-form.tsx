@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import { Avatar } from "@/components/avatar";
+import { ProfilePhotoUpload } from "@/components/profile-photo-upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { INTEREST_GROUPS } from "@/lib/interests";
@@ -114,13 +114,12 @@ export function AccountForm({
         </header>
 
         <section className="rounded-xl border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <Avatar
+          <div className="flex items-start gap-3">
+            <ProfilePhotoUpload
               name={data.displayName || email}
               photoUrl={photoUrl}
-              className="size-14 text-base"
             />
-            <div className="min-w-0">
+            <div className="min-w-0 pt-1">
               <p className="truncate font-semibold">
                 {data.displayName || "No name yet"}
               </p>

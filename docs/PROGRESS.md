@@ -1,6 +1,6 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 12:50pm. Demo at 2:00pm.
+Last updated: Saturday, Oct 17, 2026, 1:10pm. Demo at 2:00pm.
 
 `AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
 
@@ -104,7 +104,7 @@ These were all tested in the browser against the real Supabase project.
   - create, for campus or off-campus places; off-campus address suggestions via Photon; the host joins automatically
   - delete, for the host only
 - [x] **Home:** Your upcoming (capped at 4), For you, Happening today, and the two shortcuts.
-- [x] **Account:** edit name, major, bio, and interests; log out. Save lives in a sticky header and stays disabled until something changes. The form reads the signed-in user's row from `profiles` (not cached/mock data). Users can delete their own account (auth user, profile, hosted activities, joins, and avatar files). `/profile` redirects to `/account`.
+- [x] **Account:** edit name, major, bio, photo, and interests; log out. Save lives in a sticky header and stays disabled until something changes. The form reads the signed-in user's row from `profiles` (not cached/mock data). Photo changes upload to the `avatars` bucket right away (same pattern as onboarding). Users can delete their own account (auth user, profile, hosted activities, joins, and avatar files). `/profile` redirects to `/account`.
 
 ## In progress / not started
 
@@ -114,7 +114,7 @@ These were all tested in the browser against the real Supabase project.
   - A simple chat UI at `app/(tabs)/resources/page.tsx`.
   - New env var `ANTHROPIC_API_KEY`, server only. Add the name to `.env.example`.
   - It must answer "Where can I get free food?" well for the demo.
-- [ ] **Uncommitted work:** the Activities tab, Account tab, `lib/maps.ts`, and the schema, seed, and `AGENTS.md` changes are all still uncommitted on `main`. Commit them before anything else.
+- [ ] **Push the photo merge** if teammates need it: `feature/home-profile`'s Change photo is now on Account. `/profile` still redirects there.
 - [ ] **Hosting:** not decided. `AGENTS.md` still says "_fill in_". Vercel is the easy choice for Next.js.
 - [ ] **Team ownership table** in `AGENTS.md` is still blank.
 
@@ -123,7 +123,6 @@ These were all tested in the browser against the real Supabase project.
 - **Resources is a 404.** The Resources tab and Home's "Ask about De Anza" shortcut link to `/resources`, which doesn't exist yet. This breaks the last step of the demo path until the assistant is built.
 - **`npm run lint` fails** on the old mock page `app/home/page.tsx`: there's an unescaped `'`. That page is still reachable at `/home`, duplicating Home. `/profile` now redirects to Account.
 - **Seed data goes stale.** Activity times are set when the seed runs, so "Today" activities drift into the past. Re-run `supabase/seed.sql` shortly before the demo. This also resets anyone's joins on seed activities.
-- **Account can't change the photo.** The photo shows, but there's no re-upload yet. Onboarding is currently the only place to upload one.
 - **Search ignores the selected chip.** Typing a search looks across all activities, even if an interest chip was selected. This is on purpose, but it could surprise someone.
 - **Not tested live:** two people taking the last spot at the same moment. The database trigger should handle it, but we haven't reproduced it.
 - **To check:** the Memorial Park address in the seed (21221 Stevens Creek Blvd). Confirm it before showing the map link.
@@ -133,13 +132,12 @@ These were all tested in the browser against the real Supabase project.
 
 ## Next steps (in order)
 
-1. Commit the current work (Activities, Account, schema and seed changes) so teammates can pull it.
-2. Build the Resources assistant. Write `docs/resources.md` first, since the answers can only be as good as that file.
-3. Fix the lint errors or remove `app/home` and `app/profile` so `npm run build` and lint pass cleanly.
-4. Decide on hosting and deploy early (Vercel plus the env vars), then run the full demo path on the deployed URL and on a phone.
-5. Demo polish:
+1. Build the Resources assistant. Write `docs/resources.md` first, since the answers can only be as good as that file.
+2. Fix the lint errors or remove `app/home` so `npm run build` and lint pass cleanly.
+3. Decide on hosting and deploy early (Vercel plus the env vars), then run the full demo path on the deployed URL and on a phone.
+4. Demo polish:
    - loading states (Suspense fallbacks exist but are plain)
    - empty states
    - phone-width check on every screen
-6. Optional, only if 1–5 are done: photo re-upload on Account, then the activity group chat.
-7. **Demo morning:** re-run `seed.sql`, sign up a fresh account, and walk the demo path: sign up, onboarding, Home, open an activity, tap "I'm down", see it in Your upcoming, ask Resources "Where can I get free food?".
+5. Optional, only if 1–4 are done: the activity group chat.
+6. **Demo morning:** re-run `seed.sql`, sign up a fresh account, and walk the demo path: sign up, onboarding, Home, open an activity, tap "I'm down", see it in Your upcoming, ask Resources "Where can I get free food?".
