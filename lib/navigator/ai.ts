@@ -1,10 +1,14 @@
-import contacts from "@/data/contacts.json";
-import type { NavigatorResponse } from "@/lib/navigator/types";
+import Anthropic from "@anthropic-ai/sdk";
 
-export const navigatorSystemPrompt = `You are Campus Navigator for De Anza students. Return ONLY valid JSON matching the NavigatorResponse shape. Use only information from deanza.edu. Never invent buildings, times, or email addresses. If unsure, set confidence to "low" and provide the best contact. If the answer depends on the student's situation, ask one short follow-up question instead of guessing.`;
+import contacts from "@/data/contacts.json";
+import { CAMPUS_NAVIGATOR_SYSTEM_PROMPT } from "@/lib/navigator/prompt";
+import type { NavigatorResponse } from "@/lib/navigator/types";
+import { validateNavigatorResponse } from "@/lib/navigator/validate";
 
 // Use a positive value for upcoming, -30 for in progress, or -90 for ended.
 const PIQ_MOCK_OFFSET_MINUTES = 15;
+const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5";
+const ANTHROPIC_TIMEOUT_MS = 40_000;
 
 export const COMMUTING_KEYWORDS = [
   "car",
@@ -40,7 +44,7 @@ function contactFor(topic: string) {
   return { name: contact.name, email: contact.email };
 }
 
-export async function askNavigator(
+export async function askNavigatorMock(
   question: string,
 ): Promise<NavigatorResponse> {
   await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -150,4 +154,72 @@ export async function askNavigator(
     confidence: "low",
     contact: contactFor("general questions"),
   };
+}
+type ConversationMessage = { role: "user" | "assistant"; content: string };
+
+function buildMessages(question: string, history: ConversationMessage[]) {
+  const recent = history.slice(-8);
+  // The API needs the conversation to start with a user message.
+  while (recent.length > 0 && recent[0].role !== "user") recent.shift();
+  return [...recent, { role: "user" as const, content: question }];
+}
+
+export async function askNavigator(
+  question: string,
+  history: ConversationMessage[] = [],
+): Promise<NavigatorResponse> {
+  if (process.env.USE_MOCK_AI === "true") {
+    return askNavigatorMock(question);
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    console.error(
+      "Campus Navigator Claude request skipped: API key is not configured.",
+    );
+    return askNavigatorMock(question);
+  }
+
+  try {
+    const client = new Anthropic({ apiKey });
+    const message = await client.messages.create(
+      {
+        model: process.env.ANTHROPIC_MODEL || DEFAULT_ANTHROPIC_MODEL,
+        max_tokens: 4_000,
+        system: CAMPUS_NAVIGATOR_SYSTEM_PROMPT,
+        messages: buildMessages(question, history),
+        tools: [
+          {
+            type: "web_search_20260318",
+            name: "web_search",
+            allowed_callers: ["direct"],
+            allowed_domains: ["deanza.edu"],
+            max_uses: 3,
+          },
+        ],
+      },
+      { timeout: ANTHROPIC_TIMEOUT_MS },
+    );
+    const response = validateNavigatorResponse(message.content);
+
+    if (!response) {
+      if (process.env.NODE_ENV !== "production") {
+        const rawText = message.content
+          .map((block) => (block.type === "text" ? block.text : ""))
+          .join("");
+        console.error("Campus Navigator stop_reason:", message.stop_reason);
+        console.error(
+          "Campus Navigator raw reply (first 800 chars):",
+          rawText.slice(0, 800),
+        );
+      }
+      throw new Error("Claude returned an invalid Navigator response.");
+    }
+
+    return response;
+  } catch (error) {
+    const reason = error instanceof Error ? error.message : "Unknown error";
+    console.error("Campus Navigator Claude request failed:", reason);
+    return askNavigatorMock(question);
+  }
 }

@@ -23,6 +23,11 @@ export type NavigatorContact = {
   email: string;
 };
 
+export type NavigatorLocation = {
+  name: string;
+  mapUrl: string;
+};
+
 export type NavigatorResponse = {
   answer: string;
   steps: string[];
@@ -31,6 +36,7 @@ export type NavigatorResponse = {
   sources: NavigatorSource[];
   confidence: NavigatorConfidence;
   contact: NavigatorContact | null;
+  location?: NavigatorLocation | null;
 };
 
 export type EventStatus = "upcoming" | "in_progress" | "ended" | "unknown";
