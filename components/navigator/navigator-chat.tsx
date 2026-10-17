@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { ExternalLink, LoaderCircle, MapPin, Send } from "lucide-react";
+import { ExternalLink, LoaderCircle, Send } from "lucide-react";
 
+import { CampusMapPreview } from "@/components/navigator/campus-map-preview";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -172,18 +173,15 @@ function NavigatorAnswerCard({
             <p className="mt-1 text-sm text-muted-foreground">
               {response.event.location_text}
             </p>
-            {mapUrl && (
-              <Button
-                render={
-                  <a href={mapUrl} target="_blank" rel="noopener noreferrer" />
-                }
-                nativeButton={false}
-                variant="outline"
-                size="sm"
-                className="mt-3"
-              >
-                <MapPin /> Open campus map
-              </Button>
+            {eventBuilding && mapUrl && (
+              <div className="mt-3">
+                <CampusMapPreview
+                  name={eventBuilding.name}
+                  lat={eventBuilding.lat}
+                  lng={eventBuilding.lng}
+                  mapUrl={mapUrl}
+                />
+              </div>
             )}
             {!mapUrl && (
               <div className="mt-3 text-sm text-muted-foreground">
@@ -205,25 +203,12 @@ function NavigatorAnswerCard({
         )}
 
         {response.location && (
-          <section className="flex flex-wrap items-center gap-3">
-            <span className="text-sm text-muted-foreground">
-              {response.location.name}
-            </span>
-            <Button
-              render={
-                <a
-                  href={response.location.mapUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              nativeButton={false}
-              variant="outline"
-              size="sm"
-            >
-              <MapPin /> Open campus map
-            </Button>
-          </section>
+          <CampusMapPreview
+            name={response.location.name}
+            lat={response.location.lat}
+            lng={response.location.lng}
+            mapUrl={response.location.mapUrl}
+          />
         )}
 
         <section>

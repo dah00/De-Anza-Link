@@ -71,7 +71,12 @@ export async function POST(request: Request): Promise<Response> {
   if (!response.event) {
     const building = matchBuilding(question) ?? matchBuilding(response.answer);
     response.location = building
-      ? { name: building.name, mapUrl: getCampusMapUrl(building) }
+      ? {
+          name: building.name,
+          mapUrl: getCampusMapUrl(building),
+          lat: building.lat,
+          lng: building.lng,
+        }
       : null;
   }
   const topicsHint =

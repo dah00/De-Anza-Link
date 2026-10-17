@@ -26,6 +26,8 @@ export type NavigatorContact = {
 export type NavigatorLocation = {
   name: string;
   mapUrl: string;
+  lat: number;
+  lng: number;
 };
 
 export type NavigatorResponse = {
