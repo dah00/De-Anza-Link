@@ -1,14 +1,562 @@
 [
   {
-    "name": "Learning Center",
-    "aliases": ["LC", "Learning Center", "LC Building"],
-    "lat": 37.3184,
-    "lng": -122.0446
+    "name": "Flint Center Parking Garage",
+    "aliases": [
+      "flint center parking garage",
+      "flint parking garage"
+    ],
+    "lat": 37.321815,
+    "lng": -122.048157
   },
   {
-    "name": "Registration and Student Services",
-    "aliases": ["RSS", "Registration and Student Services", "RSS Building"],
-    "lat": 37.318,
-    "lng": -122.0451
+    "name": "De Anza Library",
+    "aliases": [
+      "de anza library",
+      "de hart library",
+      "library"
+    ],
+    "lat": 37.320346,
+    "lng": -122.046643
+  },
+  {
+    "name": "Stelling Parking Structure",
+    "aliases": [
+      "stelling parking",
+      "stelling parking structure"
+    ],
+    "lat": 37.318897,
+    "lng": -122.043108
+  },
+  {
+    "name": "Fujitsu Planetarium",
+    "aliases": [
+      "fujitsu planetarium",
+      "planetarium"
+    ],
+    "lat": 37.318925,
+    "lng": -122.046053
+  },
+  {
+    "name": "De Anza College Administration",
+    "aliases": [
+      "admin building",
+      "administration",
+      "de anza college administration"
+    ],
+    "lat": 37.319934,
+    "lng": -122.045783
+  },
+  {
+    "name": "Building G",
+    "aliases": [
+      "building g",
+      "g"
+    ],
+    "lat": 37.317248,
+    "lng": -122.045669
+  },
+  {
+    "name": "Learning Center West",
+    "aliases": [
+      "dehart learning center",
+      "lc",
+      "lcw",
+      "learning center",
+      "learning center west"
+    ],
+    "lat": 37.320327,
+    "lng": -122.047226
+  },
+  {
+    "name": "S1",
+    "aliases": [
+      "s1"
+    ],
+    "lat": 37.31933,
+    "lng": -122.046172
+  },
+  {
+    "name": "PE4",
+    "aliases": [
+      "pe4"
+    ],
+    "lat": 37.318842,
+    "lng": -122.045487
+  },
+  {
+    "name": "Hinson Campus Center",
+    "aliases": [
+      "campus center",
+      "hinson",
+      "hinson campus center"
+    ],
+    "lat": 37.32079,
+    "lng": -122.045477
+  },
+  {
+    "name": "Building S7",
+    "aliases": [
+      "building s7",
+      "s7"
+    ],
+    "lat": 37.319557,
+    "lng": -122.047604
+  },
+  {
+    "name": "Building PE1",
+    "aliases": [
+      "building pe1",
+      "pe1"
+    ],
+    "lat": 37.319288,
+    "lng": -122.045294
+  },
+  {
+    "name": "Building S4",
+    "aliases": [
+      "building s4",
+      "s4"
+    ],
+    "lat": 37.318744,
+    "lng": -122.046637
+  },
+  {
+    "name": "Building E2",
+    "aliases": [
+      "building e2",
+      "e2"
+    ],
+    "lat": 37.318851,
+    "lng": -122.047231
+  },
+  {
+    "name": "Building PE2",
+    "aliases": [
+      "building pe2",
+      "pe2"
+    ],
+    "lat": 37.319293,
+    "lng": -122.044707
+  },
+  {
+    "name": "Seminar Building",
+    "aliases": [
+      "sem",
+      "seminar building"
+    ],
+    "lat": 37.319929,
+    "lng": -122.047602
+  },
+  {
+    "name": "Building S5",
+    "aliases": [
+      "building s5",
+      "s5"
+    ],
+    "lat": 37.319357,
+    "lng": -122.047107
+  },
+  {
+    "name": "Building PE6",
+    "aliases": [
+      "building pe6",
+      "pe6"
+    ],
+    "lat": 37.318467,
+    "lng": -122.044999
+  },
+  {
+    "name": "Building E3",
+    "aliases": [
+      "building e3",
+      "e3"
+    ],
+    "lat": 37.319102,
+    "lng": -122.047607
+  },
+  {
+    "name": "Building S3",
+    "aliases": [
+      "building s3",
+      "s3"
+    ],
+    "lat": 37.31917,
+    "lng": -122.046637
+  },
+  {
+    "name": "Building PE5",
+    "aliases": [
+      "building pe5",
+      "pe5"
+    ],
+    "lat": 37.318845,
+    "lng": -122.044511
+  },
+  {
+    "name": "Kirsch Center",
+    "aliases": [
+      "kirsch",
+      "kirsch center"
+    ],
+    "lat": 37.316137,
+    "lng": -122.043557
+  },
+  {
+    "name": "Forum",
+    "aliases": [
+      "for",
+      "forum"
+    ],
+    "lat": 37.319744,
+    "lng": -122.044997
+  },
+  {
+    "name": "Building E1",
+    "aliases": [
+      "building e1",
+      "e1"
+    ],
+    "lat": 37.318294,
+    "lng": -122.047167
+  },
+  {
+    "name": "Building L2",
+    "aliases": [
+      "building l2",
+      "l2"
+    ],
+    "lat": 37.320559,
+    "lng": -122.044428
+  },
+  {
+    "name": "Building SC1",
+    "aliases": [
+      "building sc1",
+      "sc1"
+    ],
+    "lat": 37.318087,
+    "lng": -122.046432
+  },
+  {
+    "name": "Building L7",
+    "aliases": [
+      "building l7",
+      "l7"
+    ],
+    "lat": 37.319991,
+    "lng": -122.044427
+  },
+  {
+    "name": "Building SC2",
+    "aliases": [
+      "building sc2",
+      "sc2"
+    ],
+    "lat": 37.318255,
+    "lng": -122.046046
+  },
+  {
+    "name": "Building SC3",
+    "aliases": [
+      "building sc3",
+      "sc3"
+    ],
+    "lat": 37.318421,
+    "lng": -122.04641
+  },
+  {
+    "name": "Building A5",
+    "aliases": [
+      "a5",
+      "building a5"
+    ],
+    "lat": 37.3218,
+    "lng": -122.04567
+  },
+  {
+    "name": "Multicultural Center",
+    "aliases": [
+      "mcc",
+      "multicultural center"
+    ],
+    "lat": 37.321088,
+    "lng": -122.043793
+  },
+  {
+    "name": "Building A1",
+    "aliases": [
+      "a1",
+      "building a1"
+    ],
+    "lat": 37.322054,
+    "lng": -122.046153
+  },
+  {
+    "name": "Building A2",
+    "aliases": [
+      "a2",
+      "building a2"
+    ],
+    "lat": 37.322055,
+    "lng": -122.04591
+  },
+  {
+    "name": "Student & Community Services",
+    "aliases": [
+      "student & community services",
+      "student and community services"
+    ],
+    "lat": 37.32163,
+    "lng": -122.04478
+  },
+  {
+    "name": "Baldwin Winery Building",
+    "aliases": [
+      "baldwin winery building"
+    ],
+    "lat": 37.321231,
+    "lng": -122.045816
+  },
+  {
+    "name": "Building A3",
+    "aliases": [
+      "a3",
+      "building a3"
+    ],
+    "lat": 37.322054,
+    "lng": -122.045671
+  },
+  {
+    "name": "Building A6",
+    "aliases": [
+      "a6",
+      "building a6"
+    ],
+    "lat": 37.321584,
+    "lng": -122.045412
+  },
+  {
+    "name": "Creative Arts Classrooms",
+    "aliases": [
+      "a8",
+      "creative arts classrooms"
+    ],
+    "lat": 37.32205,
+    "lng": -122.046644
+  },
+  {
+    "name": "Building A7",
+    "aliases": [
+      "a7",
+      "building a7"
+    ],
+    "lat": 37.321461,
+    "lng": -122.045668
+  },
+  {
+    "name": "Building A4",
+    "aliases": [
+      "a4",
+      "building a4"
+    ],
+    "lat": 37.321629,
+    "lng": -122.045909
+  },
+  {
+    "name": "Building L6",
+    "aliases": [
+      "building l6",
+      "l6"
+    ],
+    "lat": 37.3199,
+    "lng": -122.044054
+  },
+  {
+    "name": "Building L8",
+    "aliases": [
+      "building l8",
+      "l8"
+    ],
+    "lat": 37.320117,
+    "lng": -122.044814
+  },
+  {
+    "name": "Building F3",
+    "aliases": [
+      "building f3",
+      "f3"
+    ],
+    "lat": 37.320664,
+    "lng": -122.043855
+  },
+  {
+    "name": "Building F1",
+    "aliases": [
+      "building f1",
+      "f1"
+    ],
+    "lat": 37.320443,
+    "lng": -122.045012
+  },
+  {
+    "name": "Advanced Technology Center",
+    "aliases": [
+      "advanced technology center",
+      "atc"
+    ],
+    "lat": 37.321092,
+    "lng": -122.044563
+  },
+  {
+    "name": "Building L1",
+    "aliases": [
+      "building l1",
+      "l1"
+    ],
+    "lat": 37.320444,
+    "lng": -122.044815
+  },
+  {
+    "name": "Building L3",
+    "aliases": [
+      "building l3",
+      "l3"
+    ],
+    "lat": 37.320661,
+    "lng": -122.044056
+  },
+  {
+    "name": "Child Development Center",
+    "aliases": [
+      "cdc",
+      "child development center"
+    ],
+    "lat": 37.316331,
+    "lng": -122.045921
+  },
+  {
+    "name": "Building F1 (2)",
+    "aliases": [
+      "building f1 (2)"
+    ],
+    "lat": 37.320115,
+    "lng": -122.045012
+  },
+  {
+    "name": "Building F5",
+    "aliases": [
+      "building f5",
+      "f5"
+    ],
+    "lat": 37.319806,
+    "lng": -122.044421
+  },
+  {
+    "name": "Child Development Center (2)",
+    "aliases": [
+      "child development center (2)"
+    ],
+    "lat": 37.316634,
+    "lng": -122.046352
+  },
+  {
+    "name": "Building L5",
+    "aliases": [
+      "building l5",
+      "l5"
+    ],
+    "lat": 37.320285,
+    "lng": -122.043661
+  },
+  {
+    "name": "Building F4",
+    "aliases": [
+      "building f4",
+      "f4"
+    ],
+    "lat": 37.319915,
+    "lng": -122.043849
+  },
+  {
+    "name": "Building F2",
+    "aliases": [
+      "building f2",
+      "f2"
+    ],
+    "lat": 37.32075,
+    "lng": -122.044434
+  },
+  {
+    "name": "Building L4",
+    "aliases": [
+      "building l4",
+      "l4"
+    ],
+    "lat": 37.320277,
+    "lng": -122.043893
+  },
+  {
+    "name": "Building S8",
+    "aliases": [
+      "building s8",
+      "s8"
+    ],
+    "lat": 37.319762,
+    "lng": -122.047238
+  },
+  {
+    "name": "Building S9",
+    "aliases": [
+      "building s9",
+      "s9"
+    ],
+    "lat": 37.319961,
+    "lng": -122.047218
+  },
+  {
+    "name": "Visual and Performing Arts Center",
+    "aliases": [
+      "visual and performing arts center",
+      "vpac"
+    ],
+    "lat": 37.321695,
+    "lng": -122.043776
+  },
+  {
+    "name": "California History Center",
+    "aliases": [
+      "california history center",
+      "chc"
+    ],
+    "lat": 37.320799,
+    "lng": -122.047293
+  },
+  {
+    "name": "Media & Learning Center",
+    "aliases": [
+      "media & learning center",
+      "media and learning center",
+      "mlc"
+    ],
+    "lat": 37.320798,
+    "lng": -122.048105
+  },
+  {
+    "name": "Building S2",
+    "aliases": [
+      "building s2",
+      "s2"
+    ],
+    "lat": 37.31935,
+    "lng": -122.04592
+  },
+  {
+    "name": "Building A9",
+    "aliases": [
+      "a9",
+      "building a9"
+    ],
+    "lat": 37.321628,
+    "lng": -122.046177
   }
 ]
