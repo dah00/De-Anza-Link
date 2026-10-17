@@ -1,6 +1,6 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 1:15pm. Demo at 2:00pm.
+Last updated: Saturday, Oct 17, 2026, 1:40pm. Demo at 2:00pm.
 
 `AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
 
@@ -32,6 +32,11 @@ Browser ──► proxy.ts ──► Next.js App Router (server components + ser
 | `app/(tabs)/page.tsx`                      | Home                                                                                              |
 | `app/(tabs)/activities/`                   | List and search (`page.tsx`), upcoming (`upcoming/`), detail (`[id]/`), create (`new/`)           |
 | `app/(tabs)/account/`                      | View and edit profile, log out                                                                    |
+| `app/(tabs)/resources/`                    | De Anza assistant chat                                                                            |
+| `app/api/navigator/`                       | Resources assistant API (Claude, with a local fallback)                                           |
+| `docs/resources.md`                        | Verified campus facts the assistant may use                                                       |
+| `data/`                                    | Campus buildings and office contacts for maps and "who to ask"                                    |
+| `lib/navigator/`                           | Assistant prompt, validation, building match, and contacts                                        |
 | `components/`                              | Shared UI: `activity-card`, `avatar`, `avatar-stack`, `join-button`, `bottom-nav`, `ui/` (shadcn) |
 | `lib/supabase/`                            | `server.ts` (server components and actions), `client.ts` (browser), `proxy.ts` (session refresh)  |
 | `lib/activities.ts`                        | `Activity` type and queries (`getUpcomingActivities`, `getActivity`)                              |
@@ -62,6 +67,7 @@ Browser ──► proxy.ts ──► Next.js App Router (server components + ser
 - **Activities filter is chips plus a search bar.** Chips only show interests that have upcoming activities, so the row stays short. Search matches every word you type against title, interest, place, address, and description. If nothing matches, "Start one" opens the create form with the interest pre-filled.
 - **Home is never empty.** It shows "Your upcoming" (first 4, then "View all" to `/activities/upcoming`), then "For you" (your interests, almost-full first, because "needs 1 more" is a strong nudge), then "Happening today" (other things today that aren't already in For you), then shortcuts to create an activity and to Resources.
 - **Sample people use pravatar.cc photos.** The `Avatar` component falls back to initials if an image fails to load, so a bad network doesn't leave broken images.
+- **Resources answers start from `docs/resources.md`.** Claude may also search deanza.edu. If the API key is missing, a local fallback uses the same notes so "Where can I get free food?" still works in the demo.
 
 ## Conventions
 
@@ -84,7 +90,7 @@ Browser ──► proxy.ts ──► Next.js App Router (server components + ser
 
 ## Setup (new machine or teammate)
 
-1. `npm install`, then `cp .env.example .env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API).
+1. `npm install`, then `cp .env.example .env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API). Optional: `ANTHROPIC_API_KEY` for live Resources answers.
 2. In Supabase's SQL Editor, run `supabase/schema.sql`, then `supabase/seed.sql`.
 3. In Supabase, go to Authentication → Sign In / Providers → Email and turn off **Confirm email**. Otherwise sign-up waits for an email link.
 4. `npm run dev`. Sample accounts: `maya.chen@example.com` (and the other seed emails), password `deanzalink-demo`.
@@ -105,21 +111,17 @@ These were all tested in the browser against the real Supabase project.
   - delete, for the host only
 - [x] **Home:** Your upcoming (capped at 4), For you, Happening today, and the two shortcuts.
 - [x] **Account:** edit name, major, bio, photo, and interests; log out. Save lives in a sticky header and stays disabled until something changes. The form reads the signed-in user's row from `profiles` (not cached/mock data). Photo changes upload to the `avatars` bucket right away (same pattern as onboarding). Users can delete their own account (auth user, profile, hosted activities, joins, and avatar files). `/profile` redirects to `/account`.
+- [x] **Resources:** chat at `/resources` (Ryan's Campus Navigator, restyled to match the rest of the app). Claude is called from `POST /api/navigator` with `docs/resources.md` in the prompt and deanza.edu search. If the API key is missing or the call fails, a local fallback still answers free food, bikes, and computers. `/navigator` redirects here.
 
 ## In progress / not started
 
-- [ ] **Resources AI assistant (next up, priority 6 in `AGENTS.md`).** Not started. Plan:
-  - `docs/resources.md` holds the resource data. Only verified De Anza info; this is the only source the assistant may use.
-  - A server action or route calls the Claude API with that file in the prompt.
-  - A simple chat UI at `app/(tabs)/resources/page.tsx`.
-  - New env var `ANTHROPIC_API_KEY`, server only. Add the name to `.env.example`.
-  - It must answer "Where can I get free food?" well for the demo.
 - [ ] **Hosting:** not decided. `AGENTS.md` still says "_fill in_". Vercel is the easy choice for Next.js.
 - [ ] **Team ownership table** in `AGENTS.md` is still blank.
 
 ## Known bugs and rough edges
 
-- **Resources is a 404.** The Resources tab and Home's "Ask about De Anza" shortcut link to `/resources`, which doesn't exist yet. This breaks the last step of the demo path until the assistant is built.
+- **Resources needs `ANTHROPIC_API_KEY` for live Claude answers.** Without it, the local fallback still covers the demo question ("Where can I get free food?") plus bikes and computers. Other questions get a "I don't have that" reply with chips.
+- **Most office emails in `data/contacts.json` are still unverified.** The UI only shows contacts marked `verified: true` (right now, Roary's Market).
 - **`npm run lint` fails** on the old mock page `app/home/page.tsx`: there's an unescaped `'`. That page is still reachable at `/home`, duplicating Home. `/profile` now redirects to Account.
 - **Seed data goes stale.** Activity times are set when the seed runs, so "Today" activities drift into the past. Re-run `supabase/seed.sql` shortly before the demo. This also resets anyone's joins on seed activities.
 - **Search ignores the selected chip.** Typing a search looks across all activities, even if an interest chip was selected. This is on purpose, but it could surprise someone.
@@ -131,7 +133,7 @@ These were all tested in the browser against the real Supabase project.
 
 ## Next steps (in order)
 
-1. Build the Resources assistant. Write `docs/resources.md` first, since the answers can only be as good as that file.
+1. Add `ANTHROPIC_API_KEY` on the demo machine if you want live Claude answers (optional; fallback covers free food).
 2. Fix the lint errors or remove `app/home` so `npm run build` and lint pass cleanly.
 3. Decide on hosting and deploy early (Vercel plus the env vars), then run the full demo path on the deployed URL and on a phone.
 4. Demo polish:
