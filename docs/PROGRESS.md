@@ -1,6 +1,6 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 1:10pm. Demo at 2:00pm.
+Last updated: Saturday, Oct 17, 2026, 1:15pm. Demo at 2:00pm.
 
 `AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
 
@@ -114,7 +114,6 @@ These were all tested in the browser against the real Supabase project.
   - A simple chat UI at `app/(tabs)/resources/page.tsx`.
   - New env var `ANTHROPIC_API_KEY`, server only. Add the name to `.env.example`.
   - It must answer "Where can I get free food?" well for the demo.
-- [ ] **Push the photo merge** if teammates need it: `feature/home-profile`'s Change photo is now on Account. `/profile` still redirects there.
 - [ ] **Hosting:** not decided. `AGENTS.md` still says "_fill in_". Vercel is the easy choice for Next.js.
 - [ ] **Team ownership table** in `AGENTS.md` is still blank.
 
