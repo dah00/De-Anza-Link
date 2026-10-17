@@ -2,6 +2,8 @@
 
 Read this whole file before doing any task. It applies to every agent and every teammate on this repo.
 
+**Then read [`docs/PROGRESS.md`](docs/PROGRESS.md)** for the current state of the build: architecture, key decisions, conventions, what's done, known bugs, and next steps. This file is the brief and rarely changes; `PROGRESS.md` is the status and changes often. When you finish a feature, fix a known bug, or make a decision others should know about, update `PROGRESS.md` in the same change.
+
 ## The situation
 
 - **What:** DeAnza Link, a mobile-friendly web app that helps De Anza College students meet in person through small, interest-based activities.
@@ -19,7 +21,7 @@ Many students want to meet people but wait for someone else to make the first mo
 
 1. **Registration and login.** Sign up with email and password, log in, log out. Students must confirm they are 18 or older at sign-up.
 2. **Onboarding.** Right after sign-up, a few short steps: choose interests and hobbies (from a fixed list), upload a profile photo, then add display name, major, and a short bio. Then go to Home. Users who haven't finished onboarding are sent back to it when they log in.
-3. **Activities tab.** Browse activities, filter by interest, view an activity's details, **create** an activity (title, interest, date/time, campus location, max people), and **join/leave** with an "I'm down" button. Show spots filled ("3/5") and who is going.
+3. **Activities tab.** Browse activities, filter by interest, view an activity's details, **create** an activity (title, interest, date/time, location: a campus spot or an off-campus public place with an address, max people), and **join/leave** with an "I'm down" button. Show spots filled ("3/5") and who is going.
 4. **Home tab.** The user's upcoming activities, plus suggested activities that match their interests. Never empty: show suggestions for new users.
 5. **Resources tab: De Anza AI assistant.** A chat where students ask questions about De Anza resources (bike rental, free food, computer loans, etc.). See the rules below.
 6. **Account tab.** View and edit profile and interests, log out.
@@ -74,7 +76,7 @@ The app should look like a small team designed it by hand, not like a generic AI
 
 - **User / Profile:** id, email, display_name, major, bio, photo_url, is_18_plus, interests[], onboarding_completed
 - **Interest:** fixed list (e.g., Psychology, Soccer, Chess, Computer Science, Music, Gaming, Art, Fitness)
-- **Activity:** id, title, description, interest, starts_at, location (from a fixed list of campus spots), max_people, creator_id
+- **Activity:** id, title, description, interest, starts_at, location (a campus spot from a fixed list, or an off-campus place name), address (only for off-campus places), max_people, creator_id
 - **Participation:** activity_id, user_id, joined_at
 - **Message** (if chat is built): id, activity_id, user_id, body, created_at
 
@@ -131,7 +133,7 @@ Keep it concise. No long essays, no repeating the code back.
 ## Basic safety (even for a demo)
 
 - Users must confirm 18+ at sign-up.
-- Activity locations come from a fixed list of public campus spots.
+- Activity locations are either a campus spot from a fixed list or an off-campus public place (park, café, court). The create form tells users not to use home addresses.
 - Only signed-in users can see profiles, activities, and chats.
 - Users can only edit or delete their own profile and activities.
 
@@ -139,9 +141,19 @@ Keep it concise. No long essays, no repeating the code back.
 
 > **Team: fill in so agents know who owns what.**
 
-| Area | Owner |
-|---|---|
-| Auth, onboarding, Account | _name_ |
-| Activities, Home | _name_ |
+| Area                                  | Owner  |
+| ------------------------------------- | ------ |
+| Auth, onboarding, Account             | _name_ |
+| Activities, Home                      | _name_ |
 | Resources AI assistant, resource data | _name_ |
-| Chat (if time allows) | _name_ |
+| Chat (if time allows)                 | _name_ |
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

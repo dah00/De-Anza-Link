@@ -89,6 +89,10 @@ create table if not exists public.activities (
 
 create index if not exists activities_starts_at_idx on public.activities (starts_at);
 
+-- Off-campus activities have a street address; campus spots leave it empty.
+alter table public.activities
+  add column if not exists address text check (char_length(address) <= 200);
+
 alter table public.activities enable row level security;
 
 drop policy if exists "Signed-in users can view activities" on public.activities;

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, MapPin } from "lucide-react";
+import { Check, Clock, MapPin } from "lucide-react";
 import { spotsLeft, type Activity } from "@/lib/activities";
 import { formatWhen } from "@/lib/time";
 import { AvatarStack, goingNames } from "./avatar-stack";
@@ -65,6 +65,12 @@ export function ActivityCard({
           <div className="relative z-10 shrink-0">
             <JoinButton activityId={activity.id} full={left === 0} />
           </div>
+        )}
+        {showJoin && activity.joinedByMe && (
+          <span className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-primary">
+            <Check className="size-4" />
+            You&apos;re going
+          </span>
         )}
       </div>
     </article>

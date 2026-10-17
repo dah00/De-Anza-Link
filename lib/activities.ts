@@ -4,6 +4,7 @@ export type Person = {
   id: string;
   displayName: string;
   photoUrl: string | null;
+  major: string | null;
 };
 
 export type Activity = {
@@ -13,6 +14,7 @@ export type Activity = {
   interest: string;
   startsAt: string;
   location: string;
+  address: string | null;
   maxPeople: number;
   creatorId: string;
   going: Person[];
@@ -30,6 +32,7 @@ type ActivityRow = {
   interest: string;
   starts_at: string;
   location: string;
+  address: string | null;
   max_people: number;
   creator_id: string;
   participations: {
@@ -38,14 +41,18 @@ type ActivityRow = {
       id: string;
       display_name: string | null;
       photo_url: string | null;
+      major: string | null;
     } | null;
   }[];
 };
 
 const ACTIVITY_SELECT = `
-  id, title, description, interest, starts_at, location, max_people, creator_id,
-  participations (joined_at, profiles (id, display_name, photo_url))
+  id, title, description, interest, starts_at, location, address, max_people, creator_id,
+  participations (joined_at, profiles (id, display_name, photo_url, major))
 `;
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function toActivity(row: ActivityRow, userId: string): Activity {
   const going = [...row.participations]
@@ -57,6 +64,7 @@ function toActivity(row: ActivityRow, userId: string): Activity {
               id: p.profiles.id,
               displayName: p.profiles.display_name ?? "Student",
               photoUrl: p.profiles.photo_url,
+              major: p.profiles.major,
             },
           ]
         : [],
@@ -69,6 +77,7 @@ function toActivity(row: ActivityRow, userId: string): Activity {
     interest: row.interest,
     startsAt: row.starts_at,
     location: row.location,
+    address: row.address,
     maxPeople: row.max_people,
     creatorId: row.creator_id,
     going,
@@ -92,4 +101,22 @@ export async function getUpcomingActivities(
   return (data as unknown as ActivityRow[]).map((row) =>
     toActivity(row, userId),
   );
+}
+
+/** One activity by id, or null if it doesn't exist. */
+export async function getActivity(
+  supabase: SupabaseClient,
+  id: string,
+  userId: string,
+): Promise<Activity | null> {
+  if (!UUID_RE.test(id)) return null;
+
+  const { data, error } = await supabase
+    .from("activities")
+    .select(ACTIVITY_SELECT)
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data ? toActivity(data as unknown as ActivityRow, userId) : null;
 }

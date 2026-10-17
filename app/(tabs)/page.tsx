@@ -14,9 +14,8 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { formatWhen, isCampusToday } from "@/lib/time";
 import { cn } from "@/lib/utils";
-import { logOut } from "../(auth)/actions";
-
 const FOR_YOU_LIMIT = 4;
+const UPCOMING_PREVIEW = 4;
 
 export default function HomePage() {
   return (
@@ -104,26 +103,36 @@ async function Home() {
         </Link>
       </div>
 
-      <Section title="Your upcoming">
+      <Section
+        title="Your upcoming"
+        viewAllHref={
+          upcoming.length > UPCOMING_PREVIEW
+            ? "/activities/upcoming"
+            : undefined
+        }
+      >
         {upcoming.length === 0 ? (
           <EmptyNote>
             Nothing yet. Tap &ldquo;I&apos;m down&rdquo; on something below and
             it&apos;ll show up here.
           </EmptyNote>
         ) : (
-          upcoming.map((activity) => (
-            <UpcomingRow
-              key={activity.id}
-              activity={activity}
-              myId={user.id}
-              now={now}
-            />
-          ))
+          upcoming
+            .slice(0, UPCOMING_PREVIEW)
+            .map((activity) => (
+              <UpcomingRow
+                key={activity.id}
+                activity={activity}
+                myId={user.id}
+                now={now}
+              />
+            ))
         )}
       </Section>
 
       <Section
         title="For you"
+        viewAllHref="/activities"
         hint={
           forYouIsFallback
             ? "Nothing open matches your interests right now, so here's what's filling up."
@@ -153,9 +162,12 @@ async function Home() {
         )}
       </Section>
 
-      <Section title="Happening today" hint="Anything on campus today.">
+      <Section
+        title="Happening today"
+        hint="Other things happening today that aren't already above."
+      >
         {today.length === 0 ? (
-          <EmptyNote>Nothing else on campus today.</EmptyNote>
+          <EmptyNote>Nothing else happening today.</EmptyNote>
         ) : (
           today.map((activity) => (
             <ActivityCard
@@ -167,15 +179,6 @@ async function Home() {
           ))
         )}
       </Section>
-
-      <form action={logOut}>
-        <button
-          type="submit"
-          className="text-sm text-muted-foreground underline underline-offset-4"
-        >
-          Log out
-        </button>
-      </form>
     </div>
   );
 }
@@ -211,15 +214,27 @@ function UpcomingRow({
 function Section({
   title,
   hint,
+  viewAllHref,
   children,
 }: {
   title: string;
   hint?: string;
+  viewAllHref?: string;
   children: React.ReactNode;
 }) {
   return (
     <section>
-      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-lg font-semibold">{title}</h2>
+        {viewAllHref && (
+          <Link
+            href={viewAllHref}
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            View all
+          </Link>
+        )}
+      </div>
       {hint && <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>}
       <div className="mt-3 flex flex-col gap-3">{children}</div>
     </section>

@@ -135,6 +135,13 @@ values
     'Bring one idea, leave with feedback.', 'Startups',
     pg_temp.day_at(5, '15:00'), 'Campus Center', 5, 'a0000000-0000-4000-8000-000000000004');
 
+insert into public.activities (id, title, description, interest, starts_at, location, address, max_people, creator_id)
+values
+  ('b0000000-0000-4000-8000-000000000016', 'Pickleball at Memorial Park',
+    'I''ll bring paddles and balls. Never played? Perfect.', 'Pickleball',
+    pg_temp.day_at(2, '17:00'), 'Cupertino Memorial Park',
+    '21221 Stevens Creek Blvd, Cupertino, CA 95014', 4, 'a0000000-0000-4000-8000-000000000004');
+
 insert into public.participations (activity_id, user_id)
 select ('b0000000-0000-4000-8000-0000000000' || a)::uuid, ('a0000000-0000-4000-8000-00000000000' || u)::uuid
 from (values
@@ -152,5 +159,6 @@ from (values
   ('12', 5), ('12', 1),
   ('13', 6), ('13', 1), ('13', 2), ('13', 7), ('13', 8),
   ('14', 7), ('14', 8),
-  ('15', 4), ('15', 2)
+  ('15', 4), ('15', 2),
+  ('16', 4), ('16', 8)
 ) as p(a, u);

@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarDays, House, MessageCircle, UserRound } from "lucide-react";
@@ -13,14 +14,25 @@ const TABS = [
 ] as const;
 
 export function BottomNav() {
-  const pathname = usePathname();
+  return (
+    <Suspense fallback={<NavBar pathname={null} />}>
+      <ActiveNavBar />
+    </Suspense>
+  );
+}
 
+function ActiveNavBar() {
+  return <NavBar pathname={usePathname()} />;
+}
+
+function NavBar({ pathname }: { pathname: string | null }) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-card pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto grid max-w-md grid-cols-4">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
+            pathname !== null &&
+            (href === "/" ? pathname === "/" : pathname.startsWith(href));
           return (
             <Link
               key={href}
