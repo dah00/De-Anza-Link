@@ -9,6 +9,21 @@ import { cn } from "@/lib/utils";
 import { logOut } from "../../(auth)/actions";
 import { updateProfile, type ProfileData } from "./actions";
 
+function sameInterests(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const set = new Set(b);
+  return a.every((interest) => set.has(interest));
+}
+
+function isDirty(current: ProfileData, saved: ProfileData) {
+  return (
+    current.displayName !== saved.displayName ||
+    current.major !== saved.major ||
+    current.bio !== saved.bio ||
+    !sameInterests(current.interests, saved.interests)
+  );
+}
+
 export function AccountForm({
   email,
   photoUrl,
@@ -19,10 +34,13 @@ export function AccountForm({
   initial: ProfileData;
 }) {
   const [data, setData] = useState(initial);
+  const [saved, setSaved] = useState(initial);
   const [status, setStatus] = useState<
     { kind: "saved" } | { kind: "error"; message: string } | null
   >(null);
   const [pending, startTransition] = useTransition();
+
+  const dirty = isDirty(data, saved);
 
   const update = (patch: Partial<ProfileData>) => {
     setStatus(null);
@@ -38,19 +56,46 @@ export function AccountForm({
 
   const save = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!dirty || pending) return;
     startTransition(async () => {
       const result = await updateProfile(data);
-      setStatus(
-        result?.error
-          ? { kind: "error", message: result.error }
-          : { kind: "saved" },
-      );
+      if (result?.error) {
+        setStatus({ kind: "error", message: result.error });
+        return;
+      }
+      setSaved(data);
+      setStatus({ kind: "saved" });
     });
   };
 
   return (
-    <div className="mt-6 flex flex-col gap-6">
+    <div className="flex flex-col gap-6">
       <form onSubmit={save} className="flex flex-col gap-6">
+        <header className="sticky top-0 z-10 -mx-4 -mt-6 flex items-start justify-between gap-3 border-b bg-background px-4 pt-6 pb-3">
+          <div className="min-w-0">
+            <h1 className="text-2xl font-semibold">Your profile</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Let other students know a little about you.
+            </p>
+            {status?.kind === "error" && (
+              <p className="mt-1 text-sm text-destructive">{status.message}</p>
+            )}
+            {status?.kind === "saved" && (
+              <p role="status" className="mt-1 text-sm text-primary">
+                Saved.
+              </p>
+            )}
+          </div>
+          <Button
+            type="submit"
+            size="sm"
+            className="mt-1 px-3"
+            disabled={!dirty || pending}
+          >
+            {pending ? "Saving..." : "Save"}
+          </Button>
+        </header>
+
         <section className="rounded-xl border bg-card p-4">
           <div className="flex items-center gap-3">
             <Avatar
@@ -144,20 +189,6 @@ export function AccountForm({
             ))}
           </div>
         </section>
-
-        <div className="sticky bottom-20 flex flex-col gap-2">
-          {status?.kind === "error" && (
-            <p className="text-sm text-destructive">{status.message}</p>
-          )}
-          {status?.kind === "saved" && (
-            <p role="status" className="text-sm text-primary">
-              Saved.
-            </p>
-          )}
-          <Button type="submit" size="lg" className="h-11" disabled={pending}>
-            {pending ? "Saving..." : "Save changes"}
-          </Button>
-        </div>
       </form>
 
       <form action={logOut}>

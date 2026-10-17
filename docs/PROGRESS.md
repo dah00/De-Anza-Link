@@ -1,6 +1,6 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 10:55am. Demo at 2:00pm.
+Last updated: Saturday, Oct 17, 2026, 12:20pm. Demo at 2:00pm.
 
 `AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
 
@@ -104,7 +104,7 @@ These were all tested in the browser against the real Supabase project.
   - create, for campus or off-campus places; off-campus address suggestions via Photon; the host joins automatically
   - delete, for the host only
 - [x] **Home:** Your upcoming (capped at 4), For you, Happening today, and the two shortcuts.
-- [x] **Account (built by a teammate, not yet committed):** edit name, major, bio, and interests; log out.
+- [x] **Account:** edit name, major, bio, and interests; log out. Save lives in a sticky header and stays disabled until something changes.
 
 ## In progress / not started
 
