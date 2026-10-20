@@ -1,8 +1,8 @@
 # DeAnza Link: Progress
 
-Last updated: Saturday, Oct 17, 2026, 1:40pm. Demo at 2:00pm.
+Last updated: Monday, Oct 19, 2026. **Phase: post-hackathon hardening for real students.**
 
-`AGENTS.md` is the brief (scope, rules, design). This file is the current state of the build. Update it when you finish something.
+`AGENTS.md` is the brief. Detailed rules are in `.claude/skills/`. This file holds status only. Update it in the same change when you finish something, find an issue, or make a decision.
 
 ## Architecture
 
@@ -10,135 +10,58 @@ Last updated: Saturday, Oct 17, 2026, 1:40pm. Demo at 2:00pm.
 Browser ──► proxy.ts ──► Next.js App Router (server components + server actions) ──► Supabase
             (session,                                                                (Postgres + RLS,
              redirects)                                                               Auth, Storage)
+                         app/api/navigator ──► Claude API (+ deanza.edu web search)
 ```
 
-- **Next.js 16.4 (App Router, Turbopack)** for pages and backend. No separate API server. Reads happen in server components; writes go through server actions (`"use server"` files).
-- **Supabase** for everything stored:
-  - **Auth:** email and password, using cookie sessions via `@supabase/ssr`.
-  - **Postgres:** tables `profiles`, `activities`, `participations`. Row-level security is on for all of them.
-  - **Storage:** the `avatars` bucket, one folder per user id.
-- **Route protection** lives in `proxy.ts` and `lib/supabase/proxy.ts`. On every request it refreshes the session, then:
-  - signed out: redirect to `/login`
-  - signed in but onboarding not finished: redirect to `/onboarding`
-  - onboarded and visiting `/login`, `/signup`, or `/onboarding`: redirect to `/`
+- One Next.js 16 app, no separate backend. Reads happen in server components; writes go through server actions.
+- Supabase handles auth (cookie sessions via `@supabase/ssr`), Postgres (`profiles`, `activities`, `participations`, all with RLS), and Storage (`avatars`).
+- `proxy.ts` gates every page (login → onboarding → app). It does **not** cover `/api/*`.
 
-### Folder map
+## Key decisions
 
-| Path                                       | What's there                                                                                      |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `app/(auth)/`                              | `/login`, `/signup`, and the `signUp`, `logIn`, `logOut` actions                                  |
-| `app/onboarding/`                          | 3-step flow: interests, photo, then name, major, and bio                                          |
-| `app/(tabs)/`                              | Everything with the bottom nav. `layout.tsx` adds the phone-width container and `BottomNav`       |
-| `app/(tabs)/page.tsx`                      | Home                                                                                              |
-| `app/(tabs)/activities/`                   | List and search (`page.tsx`), upcoming (`upcoming/`), detail (`[id]/`), create (`new/`)           |
-| `app/(tabs)/account/`                      | View and edit profile, log out                                                                    |
-| `app/(tabs)/resources/`                    | De Anza assistant chat                                                                            |
-| `app/api/navigator/`                       | Resources assistant API (Claude, with a local fallback)                                           |
-| `docs/resources.md`                        | Verified campus facts the assistant may use                                                       |
-| `data/`                                    | Campus buildings and office contacts for maps and "who to ask"                                    |
-| `lib/navigator/`                           | Assistant prompt, validation, building match, and contacts                                        |
-| `components/`                              | Shared UI: `activity-card`, `avatar`, `avatar-stack`, `join-button`, `bottom-nav`, `ui/` (shadcn) |
-| `lib/supabase/`                            | `server.ts` (server components and actions), `client.ts` (browser), `proxy.ts` (session refresh)  |
-| `lib/activities.ts`                        | `Activity` type and queries (`getUpcomingActivities`, `getActivity`)                              |
-| `lib/activity-actions.ts`                  | `joinActivity`, `leaveActivity`, `createActivity`, `deleteActivity`                               |
-| `lib/interests.ts`, `lib/locations.ts`     | Fixed interest list (grouped) and campus spots                                                    |
-| `lib/time.ts`                              | Campus time zone helpers ("Today", "Tomorrow", and form day and time to a real timestamp)         |
-| `lib/maps.ts`                              | Google Maps and Apple Maps links                                                                  |
-| `supabase/schema.sql`, `supabase/seed.sql` | Database schema and demo data. Both are safe to re-run                                            |
-
-### Data model
-
-- **`profiles`:** `id` (same as the auth user), `email`, `display_name`, `major`, `bio`, `photo_url`, `is_18_plus`, `interests text[]`, `onboarding_completed`. A trigger (`handle_new_user`) creates the row at sign-up.
-- **`activities`:**
-  - `title` (up to 80 characters), `description` (up to 500), `interest`, `starts_at`
-  - `location`: a campus spot or an off-campus place name
-  - `address`: off-campus only, otherwise null
-  - `max_people` (2 to 20), `creator_id`
-- **`participations`:** `(activity_id, user_id)` primary key and `joined_at`. A trigger (`check_activity_capacity`) locks the activity row and rejects a join if the activity is full or has already started.
-
-## Key decisions and why
-
-- **Supabase instead of our own auth and database.** It gives us login, a database, and file storage in one free service, with no backend to deploy. Row-level security means the safety rules ("only edit your own stuff") are enforced by the database, not just the UI.
-- **Server actions instead of API routes.** There's less code and no fetch boilerplate, and types are shared between form and server. After a write, `refresh()` re-renders the page with fresh data.
-- **Capacity is checked in the database, not in the app.** Two people tapping "I'm down" for the last spot at the same time can't both get in. The app turns the database errors (`activity_full`, `activity_started`) into friendly messages.
-- **All times use the campus time zone (America/Los_Angeles).** "Today", "Happening today", and the create form's day and time all follow campus time, not the browser's or the server's. The conversion is hand-written in `lib/time.ts` and handles daylight saving.
-- **Seed times are relative to when you run the seed.** Activities are "today at 2pm", "in 3 hours", and so on, so the demo never shows past events. The catch: **re-run `seed.sql` on demo morning.**
-- **Off-campus places need a place name plus an address.** De Anza doesn't have everything (no pickleball court, for example). The form says "public place, no home addresses". Address suggestions go through `/api/address-suggest` (Photon house search, Nominatim if Photon fails) so the browser never calls those APIs directly. Type `22350 Homestead` → pick `22350 Homestead Road, Los Altos, CA 95014`. If both lookups fail, typed addresses still work. Every activity gets Google Maps and Apple Maps links; campus spots use De Anza's address.
-- **Activities filter is chips plus a search bar.** Chips only show interests that have upcoming activities, so the row stays short. Search matches every word you type against title, interest, place, address, and description. If nothing matches, "Start one" opens the create form with the interest pre-filled.
-- **Home is never empty.** It shows "Your upcoming" (first 4, then "View all" to `/activities/upcoming`), then "For you" (your interests, almost-full first, because "needs 1 more" is a strong nudge), then "Happening today" (other things today that aren't already in For you), then shortcuts to create an activity and to Resources.
-- **Sample people use pravatar.cc photos.** The `Avatar` component falls back to initials if an image fails to load, so a bad network doesn't leave broken images.
-- **Resources answers start from `docs/resources.md`.** Claude may also search deanza.edu. If the API key is missing, a local fallback uses the same notes so "Where can I get free food?" still works in the demo.
-
-## Conventions
-
-- **Read `AGENTS.md` first.** It covers scope, the UI design rules, and the "explain every change" format.
-- **Next.js 16 is different from older versions.** Check `node_modules/next/dist/docs/` before using an API you remember.
-  - `cacheComponents` is on. Anything that reads cookies, `params`, or `searchParams` must be inside `<Suspense>`, and so must `usePathname()` on dynamic routes. `next build` fails loudly if you forget.
-  - Route protection is in `proxy.ts`. This was called `middleware.ts` in older versions.
-  - Page props use the global `PageProps<"/route">` type.
-- **Supabase client:** use `@/lib/supabase/server` on the server and `@/lib/supabase/client` in the browser. Never use the service-role or secret key in the app.
-- **Server actions** return `{ error: string }` for messages the user should see, and either redirect or call `refresh()` on success. Validate everything on the server, even if the form already checked it.
-- **UI:**
-  - Off-white background, green accent (the `primary` theme color), dark gray text. No gradients, glow, or emoji in headings.
-  - Reuse `Button`, `Input`, `ActivityCard`, and `Avatar` instead of styling new ones.
-  - Mobile first: everything sits in a `max-w-md` column.
-  - Copy is short and casual ("I'm down", "Can't make it", "Who's going").
-- **Fixed lists** (interests, campus spots) live in `lib/`. Validate with `isInterest` and `isCampusLocation` before saving.
-- **Schema changes** go in `supabase/schema.sql` and must stay re-runnable (`if not exists`, `drop policy if exists`). Tell the team when you change it, since everyone has to re-run it. Latest addition: `delete_own_account()` so a signed-in user can remove themselves from Auth (cascades to profile, activities, and joins). Avatar files are deleted through the Storage API, not `storage.objects`.
-- **Before pushing:** `npm run format && npm run lint && npm run build`.
-- **Secrets** only go in `.env.local`. Add new variable names (no values) to `.env.example`.
-
-## Setup (new machine or teammate)
-
-1. `npm install`, then `cp .env.example .env.local` and fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` (Supabase → Project Settings → API). Optional: `ANTHROPIC_API_KEY` for live Resources answers.
-2. In Supabase's SQL Editor, run `supabase/schema.sql`, then `supabase/seed.sql`.
-3. In Supabase, go to Authentication → Sign In / Providers → Email and turn off **Confirm email**. Otherwise sign-up waits for an email link.
-4. `npm run dev`. Sample accounts: `maya.chen@example.com` (and the other seed emails), password `deanzalink-demo`.
+- **Supabase** for auth, DB, and storage: no backend to run, and RLS enforces "own data only" in the database.
+- **Server actions over API routes:** less code, shared types, `refresh()` after writes.
+- **Capacity is enforced by a DB trigger**, so two people can't take the last spot.
+- **Campus time zone everywhere** (America/Los_Angeles, hand-written DST-safe helpers in `lib/time.ts`).
+- **Off-campus = public place name + address.** Geocoding goes through our `/api/address-suggest` (Photon → Nominatim).
+- **Home is never empty:** Your upcoming → For you (almost-full first) → Happening today → shortcuts.
+- **Resources assistant** answers from `docs/resources.md` plus deanza.edu search, with a local keyword fallback when Claude is unavailable.
 
 ## Done
 
-These were all tested in the browser against the real Supabase project.
+All tested in the browser against the real Supabase project during the hackathon.
 
-- [x] **Project setup:** 4-tab bottom nav, Supabase connected, schema, and seed data (8 students, 16 activities including one off-campus).
-- [x] **Registration:** sign up with email, password, and 18+ checkbox (also enforced by the database); log in; log out; protected pages.
-- [x] **Onboarding:** grouped interests with search, then photo upload to Supabase Storage, then name, major, and bio, with a progress bar. Users who didn't finish are sent back to it.
-- [x] **Activities:**
-  - list grouped by day, with interest chips and the search bar
-  - dedicated "Your upcoming" page at `/activities/upcoming`, linked from the Activities header and Home's "View all"
-  - detail page with who's going, the host label, and map links
-  - "I'm down" and "Can't make it"
-  - create, for campus or off-campus places; off-campus address suggestions via Photon; the host joins automatically
-  - delete, for the host only
-- [x] **Home:** Your upcoming (capped at 4), For you, Happening today, and the two shortcuts.
-- [x] **Account:** edit name, major, bio, photo, and interests; log out. Save lives in a sticky header and stays disabled until something changes. The form reads the signed-in user's row from `profiles` (not cached/mock data). Photo changes upload to the `avatars` bucket right away (same pattern as onboarding). Users can delete their own account (auth user, profile, hosted activities, joins, and avatar files). `/profile` redirects to `/account`.
-- [x] **Resources:** chat at `/resources` (Ryan's Campus Navigator, restyled to match the rest of the app). Claude is called from `POST /api/navigator` with `docs/resources.md` in the prompt and deanza.edu search. If the API key is missing or the call fails, a local fallback still answers free food, bikes, and computers. `/navigator` redirects here.
+- [x] Project setup: 4-tab nav, schema, and seed (8 students, 16 activities).
+- [x] Registration: email + password + 18+ (DB-enforced), log in/out, protected pages.
+- [x] Onboarding: grouped interests with search → photo upload → name, major, bio, with progress bar and redirect-back.
+- [x] Activities: day-grouped list, chips + search, `/activities/upcoming`, detail with who's going and map links, join/leave, create (campus or off-campus with address suggestions), host-only delete.
+- [x] Home: Your upcoming (4 + View all), For you, Happening today, shortcuts.
+- [x] Account: edit profile, photo, and interests (sticky Save), log out, delete own account (`delete_own_account()` + avatar cleanup).
+- [x] Resources: chat at `/resources` via `POST /api/navigator`, with fallback for food, bikes, and computers.
 
-## In progress / not started
+## Known issues (most severe first)
 
-- [ ] **Hosting:** not decided. `AGENTS.md` still says "_fill in_". Vercel is the easy choice for Next.js.
-- [ ] **Team ownership table** in `AGENTS.md` is still blank.
+1. **`/api/navigator` has no auth and no rate limit.** The proxy skips `/api/*`, so anyone with the URL can spend Claude credits. Blocker for launch.
+2. **Fallback bike answer is outdated.** `askNavigatorMock` in `lib/navigator/ai.ts` still offers e-bikes. The official page now says e-bikes are unavailable until about Winter 2027 (see `docs/resources.md`).
+3. **Default model ID** in `lib/navigator/ai.ts` (`claude-sonnet-5`) should be checked against current Claude model IDs.
+4. **Seed is demo-only:** shared password, pravatar photos, `example.com` emails. It must never run against production. There is no separate dev/prod Supabase project yet.
+5. **Email confirmation is off** in Supabase (hackathon setting). Anyone can register with any email.
+6. **Most `data/contacts.json` entries are unverified.** Only `verified: true` ones (Roary's Market) are shown.
+7. **`npm run lint` fails** on the stale mock `app/home/page.tsx`, which also duplicates Home at `/home`.
+8. Not yet checked: the Memorial Park seed address (21221 Stevens Creek Blvd), and two people taking the last spot at the same moment.
+9. By design but may surprise users: search ignores the selected interest chip.
+10. Dev-only: stale CSS after editing `app/globals.css` (restart dev). `data-cursor-ref` hydration warnings come from Cursor's browser.
 
-## Known bugs and rough edges
+## Roadmap (in order)
 
-- **Resources needs `ANTHROPIC_API_KEY` for live Claude answers.** Without it, the local fallback still covers the demo question ("Where can I get free food?") plus bikes and computers. Other questions get a "I don't have that" reply with chips.
-- **Most office emails in `data/contacts.json` are still unverified.** The UI only shows contacts marked `verified: true` (right now, Roary's Market).
-- **`npm run lint` fails** on the old mock page `app/home/page.tsx`: there's an unescaped `'`. That page is still reachable at `/home`, duplicating Home. `/profile` now redirects to Account.
-- **Seed data goes stale.** Activity times are set when the seed runs, so "Today" activities drift into the past. Re-run `supabase/seed.sql` shortly before the demo. This also resets anyone's joins on seed activities.
-- **Search ignores the selected chip.** Typing a search looks across all activities, even if an interest chip was selected. This is on purpose, but it could surprise someone.
-- **Not tested live:** two people taking the last spot at the same moment. The database trigger should handle it, but we haven't reproduced it.
-- **To check:** the Memorial Park address in the seed (21221 Stevens Creek Blvd). Confirm it before showing the map link.
-- **Dev-only quirks, not real bugs:**
-  - After editing `app/globals.css`, the dev server can serve stale CSS. Restart `npm run dev`.
-  - Hydration warnings mentioning `data-cursor-ref` come from Cursor's built-in browser, not our code.
-
-## Next steps (in order)
-
-1. Add `ANTHROPIC_API_KEY` on the demo machine if you want live Claude answers (optional; fallback covers free food).
-2. Fix the lint errors or remove `app/home` so `npm run build` and lint pass cleanly.
-3. Decide on hosting and deploy early (Vercel plus the env vars), then run the full demo path on the deployed URL and on a phone.
-4. Demo polish:
-   - loading states (Suspense fallbacks exist but are plain)
-   - empty states
-   - phone-width check on every screen
-5. Optional, only if 1–4 are done: the activity group chat.
-6. **Demo morning:** re-run `seed.sql`, sign up a fresh account, and walk the demo path: sign up, onboarding, Home, open an activity, tap "I'm down", see it in Your upcoming, ask Resources "Where can I get free food?".
+1. **Production hardening**
+   - Require a signed-in user on `/api/navigator`, and add a per-user rate limit.
+   - Delete `app/home/` so lint and build pass. Update the fallback answers to match `docs/resources.md`.
+   - Choose hosting (Vercel is the simplest fit) and set up separate dev and prod Supabase projects. Seed runs only on dev.
+   - Turn on email confirmation. Set the Supabase site URL and redirect URLs for the deployed domain.
+   - Add a privacy policy and terms page. Users share photos and meet in person.
+2. **Student verification:** allow sign-up only with De Anza / FHDA student email domains (confirm the exact domain with the college), plus email confirmation.
+3. **Password reset:** Supabase reset email → set-new-password page.
+4. **Report and block:** report an activity or user, block a user (hide their activities, prevent joins), and a minimal review path for reports.
+5. **Activity group chat:** `messages` table with RLS limited to participants, and a chat screen from activity detail.
+6. **Quality:** Supabase CLI migrations instead of one `schema.sql`, a basic test suite and CI (lint + build), error monitoring, better loading and empty states, and a real-phone check of every screen.
