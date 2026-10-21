@@ -74,6 +74,7 @@ async function FormLoader({
         offCampus: false,
         location: "",
         address: "",
+        minPeople: 2,
         maxPeople: 5,
       }}
     />

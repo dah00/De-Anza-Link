@@ -18,6 +18,7 @@ export type NewActivity = {
   offCampus: boolean;
   location: string;
   address: string;
+  minPeople: number;
   maxPeople: number;
 };
 
@@ -56,6 +57,13 @@ export async function createActivity(input: NewActivity): Promise<JoinResult> {
   ) {
     return { error: "Max people should be between 2 and 20." };
   }
+  if (
+    !Number.isInteger(input.minPeople) ||
+    input.minPeople < 2 ||
+    input.minPeople > input.maxPeople
+  ) {
+    return { error: "Min people should be between 2 and max people." };
+  }
   if (!startsAt) return { error: "Pick a day and time." };
   if (startsAt.getTime() < Date.now()) {
     return { error: "That time already passed." };
@@ -79,6 +87,7 @@ export async function createActivity(input: NewActivity): Promise<JoinResult> {
       starts_at: startsAt.toISOString(),
       location,
       address: address || null,
+      min_people: input.minPeople,
       max_people: input.maxPeople,
       creator_id: user.id,
     })

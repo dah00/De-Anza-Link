@@ -3,32 +3,45 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, House, MessageCircle, UserRound } from "lucide-react";
+import {
+  CalendarDays,
+  Compass,
+  House,
+  MessagesSquare,
+  UserRound,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const TABS = [
   { href: "/", label: "Home", icon: House },
   { href: "/activities", label: "Activities", icon: CalendarDays },
-  { href: "/resources", label: "Resources", icon: MessageCircle },
+  { href: "/chats", label: "Chats", icon: MessagesSquare },
+  { href: "/resources", label: "Resources", icon: Compass },
   { href: "/account", label: "Account", icon: UserRound },
 ] as const;
 
-export function BottomNav() {
+export function BottomNav({ unreadChats }: { unreadChats: boolean }) {
   return (
-    <Suspense fallback={<NavBar pathname={null} />}>
-      <ActiveNavBar />
+    <Suspense fallback={<NavBar pathname={null} unreadChats={unreadChats} />}>
+      <ActiveNavBar unreadChats={unreadChats} />
     </Suspense>
   );
 }
 
-function ActiveNavBar() {
-  return <NavBar pathname={usePathname()} />;
+function ActiveNavBar({ unreadChats }: { unreadChats: boolean }) {
+  return <NavBar pathname={usePathname()} unreadChats={unreadChats} />;
 }
 
-function NavBar({ pathname }: { pathname: string | null }) {
+function NavBar({
+  pathname,
+  unreadChats,
+}: {
+  pathname: string | null;
+  unreadChats: boolean;
+}) {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t bg-card pb-[env(safe-area-inset-bottom)]">
-      <div className="mx-auto grid max-w-md grid-cols-4">
+      <div className="mx-auto grid max-w-md grid-cols-5">
         {TABS.map(({ href, label, icon: Icon }) => {
           const active =
             pathname !== null &&
@@ -43,7 +56,14 @@ function NavBar({ pathname }: { pathname: string | null }) {
                 active ? "font-medium text-primary" : "text-muted-foreground",
               )}
             >
-              <Icon className="size-5" />
+              <span className="relative">
+                <Icon className="size-5" />
+                {href === "/chats" && unreadChats && (
+                  <span className="absolute -top-0.5 -right-1 size-2.5 rounded-full border-2 border-card bg-primary">
+                    <span className="sr-only">New messages</span>
+                  </span>
+                )}
+              </span>
               {label}
             </Link>
           );

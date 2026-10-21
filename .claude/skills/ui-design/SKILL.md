@@ -17,7 +17,7 @@ The app should look like a small team designed it by hand, not like a generic AI
 ## Layout
 
 - Mobile first. Tab pages sit in the `max-w-md` column from `app/(tabs)/layout.tsx`, with `BottomNav` underneath.
-- Bottom nav has 4 tabs: Home · Activities · Resources · Account. Don't add tabs without a team decision.
+- Bottom nav has 5 tabs: Home · Activities · Chats · Resources · Account. Don't add tabs without a team decision. The Chats tab shows a dot when a chat has unread messages.
 
 ## Components
 

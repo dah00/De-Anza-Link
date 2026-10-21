@@ -27,7 +27,7 @@ Route handlers under `app/api/` get **no** auth from the proxy. Check the user y
 
 - `app/(auth)/`: `/login`, `/signup`, and the `signUp`/`logIn`/`logOut` actions. No nav.
 - `app/onboarding/`: 3 steps (interests → photo → name, major, bio).
-- `app/(tabs)/`: everything with the bottom nav. Home is `app/(tabs)/page.tsx`, plus `activities/` (list, `upcoming/`, `[id]/`, `new/`), `account/`, `resources/`.
+- `app/(tabs)/`: everything with the bottom nav. Home is `app/(tabs)/page.tsx`, plus `activities/` (list, `upcoming/`, `[id]/`, `new/`), `chats/` (list, `[id]/` group chat), `account/`, `resources/`. The tabs layout also renders `ChatUpdates` (one Realtime subscription on `messages` that calls `router.refresh()`) and the Chats unread dot.
 - `app/api/`: `navigator` (Resources assistant), `address-suggest` (geocoding proxy).
 - Redirects: `/navigator` → `/resources` (`next.config.ts`), `/profile` → `/account`.
 

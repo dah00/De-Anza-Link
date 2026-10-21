@@ -13,9 +13,12 @@ description: Supabase schema, RLS, triggers, Storage, and seed rules for DeAnza 
 ## Data model (`supabase/schema.sql`)
 
 - **`profiles`:** `id` (= auth user id), `email`, `display_name`, `major`, `bio`, `photo_url`, `is_18_plus`, `interests text[]`, `onboarding_completed`. The `handle_new_user` trigger creates the row at sign-up from the auth metadata. A `check (is_18_plus)` constraint rejects anyone under 18.
-- **`activities`:** `title` (≤80), `description` (≤500), `interest`, `starts_at`, `location` (campus spot or off-campus place name), `address` (off-campus only, else null), `max_people` (2–20), `creator_id`.
+- **`activities`:** `title` (≤80), `description` (≤500), `interest`, `starts_at`, `location` (campus spot or off-campus place name), `address` (off-campus only, else null), `min_people` (2–`max_people`), `max_people` (2–20), `creator_id`.
 - **`participations`:** primary key `(activity_id, user_id)`, `joined_at`. The `check_activity_capacity` trigger locks the activity row and raises `activity_full` / `activity_started`. Actions map these to friendly messages.
-- **`messages`** (planned, for chat): `id`, `activity_id`, `user_id`, `body`, `created_at`. Only participants may read or write.
+- **`activity_chats`:** one row per activity whose group chat is open (`activity_id`, `opened_at`). Only the `open_activity_chat` trigger writes it, when a join brings the count to `min_people`. No write policies.
+- **`messages`:** `id`, `activity_id` (FK to `activity_chats`, so no posting before the chat opens), `user_id`, `body` (1–1000), `created_at`. Only people currently going may read or post. Published to Supabase Realtime.
+- **`chat_reads`:** `(activity_id, user_id)`, `last_read_at`. Own rows only. Written by `mark_chat_read(chat_id)` (DB clock).
+- `my_chats()`: the caller's open chats with last message and `unread`, latest first. `security invoker`, so RLS applies.
 - `delete_own_account()`: a signed-in user deletes themselves. It cascades to their profile, hosted activities, and joins. Avatar files are removed separately through the Storage API.
 
 ## Security

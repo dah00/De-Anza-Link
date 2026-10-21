@@ -201,21 +201,56 @@ export function CreateActivityForm({
         )}
       </fieldset>
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="flex flex-col gap-1.5 text-sm font-medium">
-          Max people
-          <select
-            value={form.maxPeople}
-            onChange={(e) => set("maxPeople", Number(e.target.value))}
-            className={fieldClass}
-          >
-            {MAX_PEOPLE_OPTIONS.map((n) => (
-              <option key={n} value={n}>
-                {n}
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 gap-3">
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            Min people
+            <select
+              value={form.minPeople}
+              onChange={(e) => {
+                const min = Number(e.target.value);
+                setError(null);
+                setForm((f) => ({
+                  ...f,
+                  minPeople: min,
+                  maxPeople: Math.max(f.maxPeople, min),
+                }));
+              }}
+              className={fieldClass}
+            >
+              {MAX_PEOPLE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm font-medium">
+            Max people
+            <select
+              value={form.maxPeople}
+              onChange={(e) => {
+                const max = Number(e.target.value);
+                setError(null);
+                setForm((f) => ({
+                  ...f,
+                  maxPeople: max,
+                  minPeople: Math.min(f.minPeople, max),
+                }));
+              }}
+              className={fieldClass}
+            >
+              {MAX_PEOPLE_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          The group chat opens once the min is going.
+        </p>
       </div>
 
       <label className="flex flex-col gap-1.5 text-sm font-medium">
@@ -244,7 +279,8 @@ export function CreateActivityForm({
         {pending ? "Posting..." : "Post activity"}
       </Button>
       <p className="-mt-1 text-center text-xs text-muted-foreground">
-        You&apos;ll be the first person going, and you count toward max people.
+        You&apos;ll be the first person going, and you count toward min and max
+        people.
       </p>
     </form>
   );

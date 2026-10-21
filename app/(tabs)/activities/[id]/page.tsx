@@ -1,12 +1,15 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Clock, MapPin, Users } from "lucide-react";
+import { ArrowLeft, Clock, MapPin, MessageSquare, Users } from "lucide-react";
 import { Avatar } from "@/components/avatar";
+import { buttonVariants } from "@/components/ui/button";
 import { getActivity, spotsLeft } from "@/lib/activities";
+import { isChatOpen } from "@/lib/chat";
 import { mapLinks } from "@/lib/maps";
 import { createClient } from "@/lib/supabase/server";
 import { formatWhen } from "@/lib/time";
+import { cn } from "@/lib/utils";
 import { DetailActions } from "./detail-actions";
 
 export default function ActivityPage({
@@ -48,6 +51,9 @@ async function ActivityDetail({
   const started = new Date(activity.startsAt).getTime() < now.getTime();
   const hosting = activity.creatorId === user.id;
   const maps = mapLinks(activity.location, activity.address);
+  const needed = activity.minPeople - activity.going.length;
+  const chatOpen =
+    activity.joinedByMe && (await isChatOpen(supabase, activity.id));
 
   return (
     <>
@@ -99,7 +105,12 @@ async function ActivityDetail({
           <span className="inline-flex items-center gap-2">
             <Users className="size-4 text-muted-foreground" />
             {activity.going.length}/{activity.maxPeople} going
-            {!started && left > 0 && left <= 2 && (
+            {!started && needed > 0 && (
+              <span className="font-medium text-primary">
+                &middot; needs {needed} more
+              </span>
+            )}
+            {!started && needed <= 0 && left > 0 && left <= 2 && (
               <span className="font-medium text-primary">
                 &middot; {left === 1 ? "1 spot left" : "2 spots left"}
               </span>
@@ -120,6 +131,24 @@ async function ActivityDetail({
         full={left === 0}
         started={started}
       />
+
+      {activity.joinedByMe &&
+        (chatOpen ? (
+          <Link
+            href={`/chats/${activity.id}`}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "lg" }),
+              "-mt-2 h-10",
+            )}
+          >
+            <MessageSquare />
+            Group chat
+          </Link>
+        ) : (
+          <p className="-mt-2 text-sm text-muted-foreground">
+            The group chat opens when {activity.minPeople} people are going.
+          </p>
+        ))}
 
       <section>
         <h2 className="text-lg font-semibold">Who&apos;s going</h2>

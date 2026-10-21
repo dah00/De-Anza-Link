@@ -15,6 +15,7 @@ export type Activity = {
   startsAt: string;
   location: string;
   address: string | null;
+  minPeople: number;
   maxPeople: number;
   creatorId: string;
   going: Person[];
@@ -33,6 +34,7 @@ type ActivityRow = {
   starts_at: string;
   location: string;
   address: string | null;
+  min_people: number;
   max_people: number;
   creator_id: string;
   participations: {
@@ -47,7 +49,7 @@ type ActivityRow = {
 };
 
 const ACTIVITY_SELECT = `
-  id, title, description, interest, starts_at, location, address, max_people, creator_id,
+  id, title, description, interest, starts_at, location, address, min_people, max_people, creator_id,
   participations (joined_at, profiles (id, display_name, photo_url, major))
 `;
 
@@ -78,6 +80,7 @@ function toActivity(row: ActivityRow, userId: string): Activity {
     startsAt: row.starts_at,
     location: row.location,
     address: row.address,
+    minPeople: row.min_people,
     maxPeople: row.max_people,
     creatorId: row.creator_id,
     going,
