@@ -18,10 +18,11 @@ The assistant must not make up campus information. A wrong location or wrong hou
 
 ## Pipeline (`POST /api/navigator`)
 
-1. `app/api/navigator/route.ts` validates `question` and `history` (≤8 messages, each <1500 chars).
+1. `app/api/navigator/route.ts` validates `question` (≤500 chars) and `history` (≤8 messages, each <1500 chars), requires a signed-in user (401), then calls `use_navigator_question()`: 10 questions per user per campus day, counted before answering (429 at the limit). The JSON reply includes `remaining`.
+   - First questions (no history) check the saved answers in `lib/navigator/answer-cache.ts` (in memory, 7 days, cleared on restart). Only confident, non-event answers from Claude are saved, never fallback ones.
 2. `lib/navigator/prompt.ts` reads `docs/resources.md` once at startup into `CAMPUS_NAVIGATOR_SYSTEM_PROMPT`. **Restart the server after editing resources.md.**
 3. `lib/navigator/ai.ts` → `askNavigator()` calls Claude:
-   - model `ANTHROPIC_MODEL`, or the default in that file
+   - model `ANTHROPIC_MODEL`, or the default `claude-haiku-5-5`
    - `web_search` tool limited to `deanza.edu`, max 3 uses, 40s timeout
 4. `lib/navigator/validate.ts` parses the JSON reply into `NavigatorResponse` (`lib/navigator/types.ts`) and drops non-deanza.edu URLs.
 5. The route adds a building/map match (`lib/navigator/buildings.ts`, `data/buildings.json`). It replaces any contact with a trusted one from `data/contacts.json` (`lib/navigator/contacts.ts`).

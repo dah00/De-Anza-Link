@@ -412,6 +412,61 @@ begin
 end;
 $$;
 
+-- Resources assistant: questions asked per user per campus day (America/Los_Angeles).
+-- No write policies, so users can't reset their own count. Only
+-- use_navigator_question() below changes it.
+create table if not exists public.navigator_usage (
+  user_id uuid not null references public.profiles (id) on delete cascade,
+  day date not null,
+  questions int not null default 0,
+  primary key (user_id, day)
+);
+
+alter table public.navigator_usage enable row level security;
+
+drop policy if exists "Users can see their own usage" on public.navigator_usage;
+create policy "Users can see their own usage"
+  on public.navigator_usage for select
+  to authenticated
+  using ((select auth.uid()) = user_id);
+
+-- Counts one question for the signed-in user and returns how many are left today.
+-- Raises 'daily_limit_reached' once they've used all 10. The limit lives here, not
+-- in an argument, so a caller can't raise it. The upsert takes a row lock, so two
+-- questions sent at once can't both slip past the limit.
+create or replace function public.use_navigator_question()
+returns int
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  uid uuid := auth.uid();
+  daily_limit constant int := 10;
+  used int;
+begin
+  if uid is null then
+    raise exception 'not_authenticated';
+  end if;
+
+  insert into public.navigator_usage (user_id, day, questions)
+  values (uid, (now() at time zone 'America/Los_Angeles')::date, 1)
+  on conflict (user_id, day) do update
+    set questions = public.navigator_usage.questions + 1
+    where public.navigator_usage.questions < daily_limit
+  returning questions into used;
+
+  if used is null then
+    raise exception 'daily_limit_reached';
+  end if;
+
+  return daily_limit - used;
+end;
+$$;
+
+revoke all on function public.use_navigator_question() from public, anon;
+grant execute on function public.use_navigator_question() to authenticated;
+
 -- Lets a signed-in user delete their own auth user. Profile, hosted activities,
 -- and joins cascade from that. Avatar files are removed through the Storage API
 -- in the app — direct deletes on storage.objects are blocked by Supabase.

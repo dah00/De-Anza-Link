@@ -5,7 +5,8 @@ import { CAMPUS_NAVIGATOR_SYSTEM_PROMPT } from "@/lib/navigator/prompt";
 import type { NavigatorResponse } from "@/lib/navigator/types";
 import { validateNavigatorResponse } from "@/lib/navigator/validate";
 
-const DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-5";
+// Haiku keeps the cost per question low. ANTHROPIC_MODEL overrides it.
+const DEFAULT_ANTHROPIC_MODEL = "claude-haiku-5-5";
 const ANTHROPIC_TIMEOUT_MS = 40_000;
 
 export const FOOD_KEYWORDS = [
@@ -262,12 +263,18 @@ function buildMessages(question: string, history: ConversationMessage[]) {
   return [...recent, { role: "user" as const, content: question }];
 }
 
+/** `fromClaude` is false when the local fallback answered (never cache those). */
 export async function askNavigator(
   question: string,
   history: ConversationMessage[] = [],
-): Promise<NavigatorResponse> {
+): Promise<{ response: NavigatorResponse; fromClaude: boolean }> {
+  const fallback = async () => ({
+    response: await askNavigatorMock(question),
+    fromClaude: false,
+  });
+
   if (process.env.USE_MOCK_AI === "true") {
-    return askNavigatorMock(question);
+    return fallback();
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -275,7 +282,7 @@ export async function askNavigator(
     console.error(
       "Campus Navigator Claude request skipped: API key is not configured.",
     );
-    return askNavigatorMock(question);
+    return fallback();
   }
 
   try {
@@ -314,10 +321,10 @@ export async function askNavigator(
       throw new Error("Claude returned an invalid Navigator response.");
     }
 
-    return response;
+    return { response, fromClaude: true };
   } catch (error) {
     const reason = error instanceof Error ? error.message : "Unknown error";
     console.error("Campus Navigator Claude request failed:", reason);
-    return askNavigatorMock(question);
+    return fallback();
   }
 }

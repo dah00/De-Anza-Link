@@ -1,11 +1,18 @@
 import { askNavigator } from "@/lib/navigator/ai";
 import {
+  cacheKey,
+  getSavedAnswer,
+  saveAnswer,
+} from "@/lib/navigator/answer-cache";
+import {
   findContact,
   findContactByEmail,
   getGeneralContact,
 } from "@/lib/navigator/contacts";
 import { getCampusMapUrl, matchBuilding } from "@/lib/navigator/buildings";
-import type { NavigatorResponse } from "@/lib/navigator/types";
+import { createClient } from "@/lib/supabase/server";
+
+const MAX_QUESTION_LENGTH = 500;
 
 type NavigatorHistoryMessage = {
   role: "user" | "assistant";
@@ -64,7 +71,56 @@ export async function POST(request: Request): Promise<Response> {
 
   const history = rawHistory;
   const question = payload.question.trim();
-  const response: NavigatorResponse = await askNavigator(question, history);
+  if (question.length > MAX_QUESTION_LENGTH) {
+    return Response.json(
+      { error: `Keep your question under ${MAX_QUESTION_LENGTH} characters.` },
+      { status: 400 },
+    );
+  }
+
+  // The proxy skips /api/*, so check the session here.
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return Response.json(
+      { error: "Log in to ask a question." },
+      { status: 401 },
+    );
+  }
+
+  // Every question counts, saved answers included. Counted before answering so
+  // questions sent at the same time can't go over the limit.
+  const { data: remaining, error: usageError } = await supabase.rpc(
+    "use_navigator_question",
+  );
+  if (usageError) {
+    if (usageError.message.includes("daily_limit_reached")) {
+      return Response.json(
+        {
+          error: "You've used your 10 questions for today. Come back tomorrow.",
+          remaining: 0,
+        },
+        { status: 429 },
+      );
+    }
+    console.error("Campus Navigator usage check failed:", usageError.message);
+    return Response.json(
+      { error: "Couldn't look that up right now. Try again in a second." },
+      { status: 500 },
+    );
+  }
+
+  // Saved answers only for first questions: a follow-up like "what about
+  // weekends?" depends on the earlier turns.
+  const key = history.length === 0 ? cacheKey(question) : "";
+  const saved = key ? getSavedAnswer(key) : null;
+  if (saved) {
+    return Response.json({ ...saved, remaining });
+  }
+
+  const { response, fromClaude } = await askNavigator(question, history);
   if (!response.event) {
     const building = matchBuilding(question) ?? matchBuilding(response.answer);
     response.location = building
@@ -97,5 +153,7 @@ export async function POST(request: Request): Promise<Response> {
     };
   }
 
-  return Response.json(response);
+  if (key && fromClaude) saveAnswer(key, response);
+
+  return Response.json({ ...response, remaining });
 }

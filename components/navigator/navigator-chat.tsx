@@ -244,6 +244,8 @@ export function NavigatorChat() {
   const [turns, setTurns] = useState<NavigatorTurn[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  // Questions left today, from the server. Unknown until the first answer.
+  const [remaining, setRemaining] = useState<number | null>(null);
 
   async function submitQuestion(nextQuestion: unknown) {
     if (typeof nextQuestion !== "string") return;
@@ -273,7 +275,9 @@ export function NavigatorChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: trimmedQuestion, history }),
       });
-      const data: NavigatorResponse | { error: string } = await result.json();
+      const data: NavigatorResponse | { error: string; remaining?: number } =
+        await result.json();
+      if (typeof data.remaining === "number") setRemaining(data.remaining);
 
       if (!result.ok || "error" in data) {
         throw new Error(
@@ -380,18 +384,26 @@ export function NavigatorChat() {
             turns.length > 0 ? "Ask a follow-up" : "Where can I get free food?"
           }
           aria-label="Ask about De Anza resources"
-          disabled={isLoading}
+          maxLength={500}
+          disabled={isLoading || remaining === 0}
         />
         <Button
           type="submit"
           size="lg"
           className="h-10"
-          disabled={isLoading || !question.trim()}
+          disabled={isLoading || remaining === 0 || !question.trim()}
         >
           {isLoading ? <LoaderCircle className="animate-spin" /> : <Send />}
           Ask
         </Button>
       </form>
+      {remaining !== null && remaining > 0 && (
+        <p className="-mt-2 text-xs text-muted-foreground">
+          {remaining === 1
+            ? "1 question left today."
+            : `${remaining} questions left today.`}
+        </p>
+      )}
     </div>
   );
 }

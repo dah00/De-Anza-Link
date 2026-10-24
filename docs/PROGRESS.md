@@ -27,6 +27,7 @@ Browser ──► proxy.ts ──► Next.js App Router (server components + ser
 - **Campus time zone everywhere** (America/Los_Angeles, hand-written DST-safe helpers in `lib/time.ts`).
 - **Off-campus = public place name + address.** Geocoding goes through our `/api/address-suggest` (Photon → Nominatim).
 - **Home is never empty:** Your upcoming → For you (almost-full first) → Happening today → shortcuts.
+- **Resources cost controls:** every question counts toward 10/day (saved answers included), counted in the DB before answering. Saved answers are in server memory, not Supabase, so users can't plant fake ones.
 - **Resources assistant** answers from `docs/resources.md` plus deanza.edu search, with a local keyword fallback when Claude is unavailable.
 
 ## Done
@@ -42,12 +43,13 @@ All tested in the browser against the real Supabase project during the hackathon
 - [x] Activity group chat (Oct 20, no AI facilitator yet): min–max people on create, chat opens at the min, live updates. Tested in the browser.
 - [x] Chats tab (Oct 20): `/chats` list (latest first, last-message preview, unread dot) and `/chats/[id]`. Unread dot on the tab. **Not yet tested in the browser.** Needs `schema.sql` re-run (`chat_reads`, `my_chats`, `mark_chat_read`).
 - [x] Resources: chat at `/resources` via `POST /api/navigator`, with fallback for food, bikes, and computers.
+- [x] Resources cost controls (Oct 23): sign-in required on `/api/navigator`, **10 questions per user per campus day** (`navigator_usage` + `use_navigator_question()`), saved answers for repeated first questions (`lib/navigator/answer-cache.ts`), default model **Claude Haiku 5.5**, questions capped at 500 characters. Signed-out 401 checked; **signed-in flow not yet tested in the browser** (needs `schema.sql` re-run).
 
 ## Known issues (most severe first)
 
-1. **`/api/navigator` has no auth and no rate limit.** The proxy skips `/api/*`, so anyone with the URL can spend Claude credits. Blocker for launch.
+1. **Saved answers live in server memory.** They reset on every restart/deploy and aren't shared between serverless instances, so expect fewer hits once hosted. If that matters after we pick a host, move them to a shared store that only the server can write (not a regular Supabase table, which any signed-in user could write to).
 2. **Fallback bike answer is outdated.** `askNavigatorMock` in `lib/navigator/ai.ts` still offers e-bikes. The official page now says e-bikes are unavailable until about Winter 2027 (see `docs/resources.md`).
-3. **Default model ID** in `lib/navigator/ai.ts` (`claude-sonnet-5`) should be checked against current Claude model IDs.
+3. **`ANTHROPIC_MODEL` overrides the Haiku default.** Leave it empty in `.env.local` and on the host unless you mean to use another model. Haiku answer quality (JSON validity, search use) still needs a check on real questions.
 4. **Seed is demo-only:** shared password, pravatar photos, `example.com` emails. It must never run against production. There is no separate dev/prod Supabase project yet.
 5. **Email confirmation is off** in Supabase (hackathon setting). Anyone can register with any email.
 6. **Most `data/contacts.json` entries are unverified.** Only `verified: true` ones (Roary's Market) are shown.
@@ -61,7 +63,6 @@ All tested in the browser against the real Supabase project during the hackathon
 ## Roadmap (in order)
 
 1. **Production hardening**
-   - Require a signed-in user on `/api/navigator`, and add a per-user rate limit.
    - Delete `app/home/` so lint and build pass. Update the fallback answers to match `docs/resources.md`.
    - Choose hosting (Vercel is the simplest fit) and set up separate dev and prod Supabase projects. Seed runs only on dev.
    - Turn on email confirmation. Set the Supabase site URL and redirect URLs for the deployed domain.

@@ -39,6 +39,8 @@ export type NavigatorResponse = {
   confidence: NavigatorConfidence;
   contact: NavigatorContact | null;
   location?: NavigatorLocation | null;
+  /** Questions the user has left today, added by the route. */
+  remaining?: number;
 };
 
 export type EventStatus = "upcoming" | "in_progress" | "ended" | "unknown";
