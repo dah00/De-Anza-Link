@@ -51,6 +51,52 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Student emails only: @deanza.edu, @fhda.edu, or a subdomain of either (e.g.
+-- @student.fhda.edu). Keep in sync with lib/student-email.ts. The app checks this
+-- too, but someone could call Supabase Auth directly with our public key, so the
+-- database is the real gate.
+create or replace function public.is_student_email(email text)
+returns boolean
+language sql
+immutable
+set search_path = ''
+as $$
+  select coalesce(lower(email) ~ '^[^@\s]+@([a-z0-9-]+\.)*(deanza|fhda)\.edu$', false);
+$$;
+
+-- Blocks sign-ups and email changes to non-student addresses. seed.sql turns on
+-- app.allow_any_email for its example.com demo users; clients can't set it.
+create or replace function public.require_student_email()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if coalesce(current_setting('app.allow_any_email', true), '') = 'on' then
+    return new;
+  end if;
+  if not public.is_student_email(new.email) then
+    raise exception 'student_email_required';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists require_student_email on auth.users;
+create trigger require_student_email
+  before insert on auth.users
+  for each row
+  when (new.email is not null)
+  execute function public.require_student_email();
+
+-- Only when the address actually changes, so existing accounts keep working.
+drop trigger if exists require_student_email_change on auth.users;
+create trigger require_student_email_change
+  before update of email on auth.users
+  for each row
+  when (new.email is not null and new.email is distinct from old.email)
+  execute function public.require_student_email();
+
 -- Profile photos: public bucket, each user can only write inside their own folder ("<user id>/...").
 insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)

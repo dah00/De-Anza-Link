@@ -11,8 +11,12 @@ export function SignupForm() {
   return (
     <form action={formAction} className="mt-6 flex flex-col gap-4">
       <label className="flex flex-col gap-1.5 text-sm font-medium">
-        Email
+        Student email
         <Input name="email" type="email" autoComplete="email" required />
+        <span className="text-xs font-normal text-muted-foreground">
+          Your @deanza.edu or @fhda.edu email. We&apos;ll send a code to confirm
+          it.
+        </span>
       </label>
       <label className="flex flex-col gap-1.5 text-sm font-medium">
         Password

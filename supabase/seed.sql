@@ -18,6 +18,10 @@ as $$
   select date_trunc('hour', now()) + make_interval(hours => h)
 $$;
 
+-- Demo users have example.com emails, so skip the student-email check for this
+-- session only (see require_student_email in schema.sql).
+select set_config('app.allow_any_email', 'on', false);
+
 -- Sample students
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -162,3 +166,6 @@ from (values
   ('15', 4), ('15', 2),
   ('16', 4), ('16', 8)
 ) as p(a, u);
+
+-- Turn the student-email check back on for this session.
+select set_config('app.allow_any_email', '', false);

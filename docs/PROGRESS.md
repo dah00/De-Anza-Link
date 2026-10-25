@@ -43,6 +43,7 @@ All tested in the browser against the real Supabase project during the hackathon
 - [x] Activity group chat (Oct 20, no AI facilitator yet): min–max people on create, chat opens at the min, live updates. Tested in the browser.
 - [x] Chats tab (Oct 20): `/chats` list (latest first, last-message preview, unread dot) and `/chats/[id]`. Unread dot on the tab. **Not yet tested in the browser.** Needs `schema.sql` re-run (`chat_reads`, `my_chats`, `mark_chat_read`).
 - [x] Resources: chat at `/resources` via `POST /api/navigator`, with fallback for food, bikes, and computers.
+- [x] Student verification (Oct 24): sign-up only with `@deanza.edu` / `@fhda.edu` (or a subdomain), checked in the app and enforced by a trigger on `auth.users` (also blocks changing to a non-student email). Email confirmation by **code** at `/verify` (resend button; unconfirmed log-ins are sent there). **Not yet tested end to end:** needs `schema.sql` re-run, the dashboard settings in README step 3, and an email that actually arrives.
 - [x] Resources cost controls (Oct 23): sign-in required on `/api/navigator`, **10 questions per user per campus day** (`navigator_usage` + `use_navigator_question()`), saved answers for repeated first questions (`lib/navigator/answer-cache.ts`), default model **Claude Haiku 5.5**, questions capped at 500 characters. Signed-out 401 checked; **signed-in flow not yet tested in the browser** (needs `schema.sql` re-run).
 
 ## Known issues (most severe first)
@@ -51,7 +52,7 @@ All tested in the browser against the real Supabase project during the hackathon
 2. **Fallback bike answer is outdated.** `askNavigatorMock` in `lib/navigator/ai.ts` still offers e-bikes. The official page now says e-bikes are unavailable until about Winter 2027 (see `docs/resources.md`).
 3. **`ANTHROPIC_MODEL` overrides the Haiku default.** Leave it empty in `.env.local` and on the host unless you mean to use another model. Haiku answer quality (JSON validity, search use) still needs a check on real questions.
 4. **Seed is demo-only:** shared password, pravatar photos, `example.com` emails. It must never run against production. There is no separate dev/prod Supabase project yet.
-5. **Email confirmation is off** in Supabase (hackathon setting). Anyone can register with any email.
+5. **Confirmation emails won't reach students yet.** Supabase's built-in sender only mails project team members, a few per hour. Before launch: pick an email provider for custom SMTP (e.g. Resend, SendGrid, Amazon SES; needs a team decision and a domain), and check that @deanza.edu / @fhda.edu inboxes don't filter it. Also confirm the real student email format with the college; staff addresses on these domains can sign up too.
 6. **Most `data/contacts.json` entries are unverified.** Only `verified: true` ones (Roary's Market) are shown.
 7. **`npm run lint` fails** on the stale mock `app/home/page.tsx`, which also duplicates Home at `/home`.
 8. **Re-run `supabase/schema.sql` before pulling the chat changes.** Without `min_people`, every activity query fails. Without `my_chats`, the Chats page errors.
@@ -65,9 +66,9 @@ All tested in the browser against the real Supabase project during the hackathon
 1. **Production hardening**
    - Delete `app/home/` so lint and build pass. Update the fallback answers to match `docs/resources.md`.
    - Choose hosting (Vercel is the simplest fit) and set up separate dev and prod Supabase projects. Seed runs only on dev.
-   - Turn on email confirmation. Set the Supabase site URL and redirect URLs for the deployed domain.
+   - Set up custom SMTP for confirmation emails (see Known issues). Set the Supabase site URL and redirect URLs for the deployed domain.
    - Add a privacy policy and terms page. Users share photos and meet in person.
-2. **Student verification:** allow sign-up only with De Anza / FHDA student email domains (confirm the exact domain with the college), plus email confirmation.
+2. **Student verification:** built (see Done). Remaining: custom SMTP and confirming the student email format with the college.
 3. **Password reset:** Supabase reset email → set-new-password page.
 4. **Report and block:** report an activity or user, block a user (hide their activities, prevent joins), and a minimal review path for reports.
 5. **Activity group chat:** basic chat done (see Done). Next: AI facilitator in the chat.

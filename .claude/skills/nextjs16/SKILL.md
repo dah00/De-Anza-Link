@@ -17,7 +17,7 @@ This is not the Next.js in most training data. Before using an API from memory, 
 
 `proxy.ts` refreshes the Supabase session on every request **except `/api/*`, `_next`, and images**, then:
 
-- signed out → `/login` (except on `/login` and `/signup`)
+- signed out → `/login` (except on `/login`, `/signup`, and `/verify`)
 - signed in, `profiles.onboarding_completed = false` → `/onboarding`
 - onboarded and on `/login`, `/signup`, or `/onboarding` → `/`
 
@@ -25,7 +25,7 @@ Route handlers under `app/api/` get **no** auth from the proxy. Check the user y
 
 ## Route groups
 
-- `app/(auth)/`: `/login`, `/signup`, and the `signUp`/`logIn`/`logOut` actions. No nav.
+- `app/(auth)/`: `/login`, `/signup`, `/verify` (email confirmation code), and the `signUp`/`logIn`/`logOut`/`verifyEmail`/`resendCode` actions. No nav. The email being confirmed travels in the httpOnly `pending_email` cookie, not the URL.
 - `app/onboarding/`: 3 steps (interests → photo → name, major, bio).
 - `app/(tabs)/`: everything with the bottom nav. Home is `app/(tabs)/page.tsx`, plus `activities/` (list, `upcoming/`, `[id]/`, `new/`), `chats/` (list, `[id]/` group chat), `account/`, `resources/`. The tabs layout also renders `ChatUpdates` (one Realtime subscription on `messages` that calls `router.refresh()`) and the Chats unread dot.
 - `app/api/`: `navigator` (Resources assistant), `address-suggest` (geocoding proxy).

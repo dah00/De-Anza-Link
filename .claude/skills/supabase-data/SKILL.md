@@ -19,6 +19,7 @@ description: Supabase schema, RLS, triggers, Storage, and seed rules for DeAnza 
 - **`messages`:** `id`, `activity_id` (FK to `activity_chats`, so no posting before the chat opens), `user_id`, `body` (1–1000), `created_at`. Only people currently going may read or post. Published to Supabase Realtime.
 - **`chat_reads`:** `(activity_id, user_id)`, `last_read_at`. Own rows only. Written by `mark_chat_read(chat_id)` (DB clock).
 - `my_chats()`: the caller's open chats with last message and `unread`, latest first. `security invoker`, so RLS applies.
+- **Student emails only:** `is_student_email()` (`@deanza.edu` / `@fhda.edu` or a subdomain) and the `require_student_email` triggers on `auth.users` (sign-up, and email changes). Same rule in `lib/student-email.ts`. `seed.sql` sets `app.allow_any_email` for its example.com users.
 - `delete_own_account()`: a signed-in user deletes themselves. It cascades to their profile, hosted activities, and joins. Avatar files are removed separately through the Storage API.
 
 ## Security
